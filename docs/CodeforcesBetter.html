@@ -161,123 +161,105 @@
 <p><strong>镜像站</strong></p>
 <p>支持官方轻量站 <a href="https://m1.codeforces.com">m1</a> / <a href="https://m2.codeforces.com">m2</a> / <a href="https://m2.codeforces.com">m3</a> 、非官方镜像站 <a href="https://codeforc.es">https://codeforc.es</a></p>
 <h2 id="常见问题">常见问题</h2>
-<div style="border: 1px solid #aaa;"><div style="border: 8px solid #ffffff00;"><details><summary>Q. 如何开始？</summary>
-      <div style="border: 8px solid #ffffff00;">
-        A. 您需要先安装 <a href="https://www.tampermonkey.net/">Tampermonkey</a> ，然后再安装该脚本
-      </div>
-</details></div></div>
-<div style="border: 1px solid #aaa;"><div style="border: 8px solid #ffffff00;"><details><summary>Q. 更新错误？</summary>
-      <div style="border: 8px solid #ffffff00;">
-        <p>A. 由于 Greasy Fork 平台的原因，当新版本刚发布时，可能会出现实际更新/安装的却是上一个版本的情况，</p>
-        <p>通常您只需要稍等几分钟，然后再次前往更新/安装即可。</p>
-        <p>您也可以将鼠标移动到脚本的更新提示框中的红色问号上，然后点击弹出信息底部的 “暂不更新” 按钮。</p>
-      </div>
-</details></div></div>
-<div style="border: 1px solid #aaa;"><div style="border: 8px solid #ffffff00;"><details><summary>Q. 一直显示加载中？</summary>
-      <div style="border: 8px solid #ffffff00;">
-        A. 请开启设置面板中的 ”兼容选项-不等待页面资源加载“ 选项
-      </div>
-</details></div></div>
-<div style="border: 1px solid #aaa;"><div style="border: 8px solid #ffffff00;"><details><summary>Q. 使用 DeepL 翻译报错 Too many requests ？</summary>
-      <div style="border: 8px solid #ffffff00;">
-        <p>A. 这通常是因为您短时间内频繁翻译，或者一次性翻译了超过5000字符的文本导致的，DeepL对翻译字数和频率是有限制的，</p>
-        <span style="background-color: #FFF3E0;color: #FF5722;">这是暂时的，一段时间后就恢复正常了</span>
-      </div>
-</details></div></div>
-<div style="border: 1px solid #aaa;"><div style="border: 8px solid #ffffff00;"><details><summary>Q. 使用 DeepL 翻译报错 undefind 或一直显示翻译中？</summary>
-      <div style="border: 8px solid #ffffff00;">
-        A. 这通常是因为您所使用的网络无法正常访问 <a href="https://www.deepl.com">www.deepl.com</a>
-      </div>
-</details></div></div>
-<div style="border: 1px solid #aaa;"><div style="border: 8px solid #ffffff00;"><details><summary>Q. 翻译结果中一些公式显示为 {xx} / [xx] / 【xx】？</summary>
-      <div style="border: 8px solid #ffffff00;">
-        A. 在使用普通翻译接口（DeepL/有道/google）进行翻译时，受脚本的实现方式所限，可能会出现{xx}/[xx]/【xx】
-        <div style="border: 8px solid #ffffff00;"></div>
-        <div style="background-color: #E3F2FD;color: #1565C0;border: 1px solid #1565c0;">
-          <div style="border: 8px solid #ffffff00;">
-            <p><strong>脚本对公式的处理方式</strong></p>
-            <p>为了保护LaTeX公式在翻译时不被破坏，脚本会先取出所有的LaTeX公式，并使用替换符{xx}/[xx]/【xx】来占位，</p>
-            <p>由于这些替换符大概率不会在翻译的过程中遭到破坏，因此可以在翻译后再根据替换符还原回LaTeX公式。</p>
-            <p>这种实现方式能如期工作的前提是替换符不被破坏，这在绝大多数情况下都是没有问题的，</p>
-            <p>但有时翻译服务会破坏替换符 ，比如 【23】 变成了 【23 / 23】 / [23]/ 【23 】/ 23 】，这些情况下脚本会通过一定的正则规则进行还原，使其仍然可以如期工作</p>
-            <p>但如果翻译服务还破坏了更多的内容，产生了歧义，比如翻译服务将【2】 313 变成了 【2312，这时就无法还原了，</p>
-            <p>对于各个翻译服务，不同的替换符本身遭到破坏的概率有所不同，您可以在右上角的设置面板中选择不同的替换符，</p>
-            <p>经过测试，通常 <code>{}</code> 表现的效果更好，因此这也是脚本默认使用的替换符</p>
-          </div>
-        </div>
-        <div style="border: 10px solid #ffffff00;"></div>
-        <div style="background-color: #E0F2F1;color: #009688;border: 1px solid #009688;">
-          <div style="border: 8px solid #ffffff00;">
-            <p><strong>提示：</strong></p>
-            <p>在使用 ChatGPT 进行翻译时不会存在这个问题，因为可以通过提示词直接告诉 ChatGPT “保持其中的LaTeX公式不翻译”，</p>
-            <p>聪明的 ChatGPT 可以很好的遵守这一点，这也是脚本推荐的翻译方式。</p>
-          </div>
-        </div>
-      </div>
-</details></div></div>
-<div style="border: 1px solid #aaa;"><div style="border: 8px solid #ffffff00;"><details><summary>Q. 如何使用 ChatGPT 翻译？</summary>
-      <div style="border: 8px solid #ffffff00;">
-        A. 如果您可以直接访问 OpenAI 的接口，并且拥有账号，那么非常棒，您只需要选中 “使用ChatGPT翻译(API)”，然后点击下方的 “添加” 按钮新建一个配置并填写即可。
-        <p>此外，您也可以购买 api 代理服务来使用 ChatGPT，下表收集了一些 api 服务商，您可以选择使用
-        </p>
-        <table style="border: 1px solid #bcaaa4;">
-          <thead>
-            <tr style="background-color: #f2f2f2;">
-              <th style="border-bottom: 1px solid #bcaaa4;">&nbsp;</th>
-              <th style="border-bottom: 1px solid #bcaaa4;">官网</th>
-              <th style="border-bottom: 1px solid #bcaaa4;">获取方式</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr style="background-color: white;">
-              <td style="background-color: #f9f9f9;">API2D</td>
-              <td style="background-color: #f9f9f9;"><a href="https://api2d.com/" target="_blank"
-                  class="url">https://api2d.com/</a></td>
-              <td style="background-color: #f9f9f9;">官网</td>
-            </tr>
-            <tr style="background-color: white;">
-              <td style="background-color: #f9f9f9;">CloseAI</td>
-              <td style="background-color: #f9f9f9;"><a href="https://console.closeai-asia.com/" target="_blank"
-                  class="url">https://console.closeai-asia.com/</a></td>
-              <td style="background-color: #f9f9f9;">官网</td>
-            </tr>
-            <tr style="background-color: white;">
-              <td style="background-color: #f9f9f9;">OhMyGPT</td>
-              <td style="background-color: #f9f9f9;"><a href="https://aigptx.top/" target="_blank"
-                  class="url">https://aigptx.top/</a></td>
-              <td style="background-color: #f9f9f9;">官网</td>
-            </tr>
-            <tr style="background-color: white;">
-              <td style="background-color: #f9f9f9;">OpenAI-SB</td>
-              <td style="background-color: #f9f9f9;"><a href="https://openai-sb.com/" target="_blank"
-                  class="url">https://openai-sb.com/</a></td>
-              <td style="background-color: #f9f9f9;">Telegram机器人</td>
-            </tr>
-            <tr style="background-color: white;">
-              <td style="background-color: #f9f9f9;">API2GPT</td>
-              <td style="background-color: #f9f9f9;"><a href="https://www.api2gpt.com/" target="_blank"
-                  class="url">https://www.api2gpt.com/</a></td>
-              <td style="background-color: #f9f9f9;">官网</td>
-            </tr>
-          </tbody>
-        </table>
-        <div style="border: 10px solid #ffffff00;"></div>
-        <div style="background-color: #FFF3E0;color: #FF5722;border: 1px solid #FF5722;">
-          <div style="border: 8px solid #ffffff00;">
-            <p><strong>免责：</strong></p>
-            <p>作者仅为收集分享，没有获得任何收益，亦不保证上述平台的稳定性，平台的任何行为均与作者无关。</p>
-            <p>建议小额充值，用完再充，这些服务商可能会跑路</p>
-          </div>
-        </div>
-        <p>如果您使用的是 api 代理服务商 提供的服务，配置中的 KEY 应该填写 api代理服务商提供的 key，</p>
-        <p>此外，您还需要在配置中额外填写 Proxy API，</p>
-        <p>Proxy API 需要填写完整的地址，这里以 <a href="https://console.closeai-asia.com/">CloseAI</a> 为例，其提供了API Base：<code>https://api.closeai-proxy.xyz</code></p>
-        <p>那么 Proxy API 后面应该填写的就是 <code>https://api.closeai-proxy.xyz/v1/chat/completions</code>，</p>
-        <span style="background-color: #FFF3E0;color: #FF5722;">注意：由于您指定了自定义的API，Tampermonkey会对您的跨域请求进行警告，请自行点击授权</span>
-      </div>
-</details></div></div>
-<h2 id="贡献代码">贡献代码</h2>
-<p>欢迎贡献代码，请前往 <a href="https://github.com/beijixiaohu/OJBetter">Github仓库</a> 创建PR</p>
+<ul>
+  <p><strong>Q. 如何开始？</strong></p>
+  <ul>
+    <li>A. 您需要先安装<a href="https://www.tampermonkey.net/">Tampermonkey</a>，然后再安装该脚本
+    </li>
+  </ul>
+  <p><strong>Q. 更新错误？</strong></p>
+  <ul>
+    <li>A. 由于 Greasyfork 平台的原因，当新版本刚发布时，可能会出现实际更新/安装的却是上一个版本的情况，通常您只需要稍等几分钟，然后再次前往更新/安装即可。
+      您也可以将鼠标移动到脚本的更新提示框中的红色问号上，然后点击弹出信息底部的 “暂不更新” 按钮。</li>
+  </ul>
+  <p><strong>Q. 一直显示加载中？</strong></p>
+  <ul>
+    <li>A. 请开启设置面板中的 ”兼容选项-不等待页面资源加载“ 选项</li>
+  </ul>
+  <p><strong>Q. 使用deepl翻译报错Too many requests ？</strong></p>
+  <ul>
+    <li>A. 这通常是因为你短时间内频繁翻译，或者一次性翻译了超过5000字符的文本导致的，deepl对翻译字数和频率是有限制的，这是暂时的，一段时间后就恢复正常了
+    </li>
+  </ul>
+  <p><strong>Q. 翻译结果中一些公式显示为{xx}/[xx]/【xx】？</strong></p>
+  <ul>
+    <li>A. 在使用普通翻译接口（deepl/有道/google）进行翻译时，受脚本的实现方式所限，可能会出现{xx}/[xx]/【xx】</li>
+    <div style="background-color: #00BCD4; color: #ffffff;">
+      <p><strong>脚本对公式的处理方式</strong></p>
+      <p>为了保护LaTeX公式在翻译时不被破坏，脚本会先取出所有的LaTeX公式，并使用替换符{xx}/[xx]/【xx】来占位，</p>
+      <p>由于这些替换符大概率不会在翻译的过程中遭到破坏，因此可以在翻译后再根据替换符还原回LaTeX公式。</p>
+      <p>这种实现方式能如期工作的前提是替换符不被破坏，这在绝大多数情况下都是没有问题的，</p>
+      <p>但有时翻译服务会破坏替换符 ，比如 【23】 变成了 【23 / 23】 / [23]/ 【23 】/ 23 】，这些情况下脚本会通过一定的正则规则进行还原，使其仍然可以如期工作</p>
+      <p>但如果翻译服务还破坏了更多的内容，产生了歧义，比如翻译服务将【2】 313 变成了 【2312，这时就无法还原了，</p>
+      <p>对于各个翻译服务，不同的替换符本身遭到破坏的概率有所不同，您可以在右上角的设置面板中选择不同的替换符，</p>
+      <p>经过测试，通常 <code>{}</code> 表现的效果更好，因此这也是脚本默认使用的替换符</p>
+    </div>
+    <div style="background-color: #009688; color: #ffffff;">
+      <p><strong>tip：</strong></p>
+      <p>在使用 ChatGPT 进行翻译时不会存在这个问题，因为可以通过提示词直接告诉 ChatGPT “保持其中的LaTeX公式不翻译”，</p>
+      <p>聪明的 ChatGPT 可以很好的遵守这一点，这也是脚本推荐的翻译方式。</p>
+    </div>
+  </ul>
+  <p><strong>Q. 如何使用ChatGPT翻译？</strong></p>
+  <ul>
+    <li>A. 如果您可以直接访问 OpenAI 的接口，并且拥有账号，那么非常棒，您只需要选中 “使用ChatGPT翻译(API)”，然后点击下方的 “添加” 按钮新建一个配置并填写即可。</li>
+    <p>此外，您也可以购买 api 代理服务来使用 ChatGPT，下表收集了一些 api 服务商，您可以选择使用
+    </p>
+    <table style="border: 1px solid #bcaaa4;">
+      <thead>
+        <tr style="background-color: #f2f2f2;">
+          <th style="border-bottom: 1px solid #bcaaa4;">&nbsp;</th>
+          <th style="border-bottom: 1px solid #bcaaa4;">官网</th>
+          <th style="border-bottom: 1px solid #bcaaa4;">获取方式</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="background-color: white;">
+          <td style="background-color: #f9f9f9;">API2D</td>
+          <td style="background-color: #f9f9f9;"><a href="https://api2d.com/" target="_blank"
+              class="url">https://api2d.com/</a></td>
+          <td style="background-color: #f9f9f9;">官网</td>
+        </tr>
+        <tr style="background-color: white;">
+          <td style="background-color: #f9f9f9;">CloseAI</td>
+          <td style="background-color: #f9f9f9;"><a href="https://console.closeai-asia.com/" target="_blank"
+              class="url">https://console.closeai-asia.com/</a></td>
+          <td style="background-color: #f9f9f9;">官网</td>
+        </tr>
+        <tr style="background-color: white;">
+          <td style="background-color: #f9f9f9;">OhMyGPT</td>
+          <td style="background-color: #f9f9f9;"><a href="https://aigptx.top/" target="_blank"
+              class="url">https://aigptx.top/</a></td>
+          <td style="background-color: #f9f9f9;">官网</td>
+        </tr>
+        <tr style="background-color: white;">
+          <td style="background-color: #f9f9f9;">OpenAI-SB</td>
+          <td style="background-color: #f9f9f9;"><a href="https://openai-sb.com/" target="_blank"
+              class="url">https://openai-sb.com/</a></td>
+          <td style="background-color: #f9f9f9;">Telegram机器人</td>
+        </tr>
+        <tr style="background-color: white;">
+          <td style="background-color: #f9f9f9;">API2GPT</td>
+          <td style="background-color: #f9f9f9;"><a href="https://www.api2gpt.com/" target="_blank"
+              class="url">https://www.api2gpt.com/</a></td>
+          <td style="background-color: #f9f9f9;">官网</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="background-color:antiquewhite">
+      <p><strong>免责：</strong></p>
+      <p>作者仅为收集分享，没有获得任何收益，亦不保证上述平台的稳定性，平台的任何行为均与作者无关。</p>
+      <p>建议小额充值，用完再充，这些服务商可能会跑路</p>
+    </div>
+    <p>如果您使用的是 api 代理服务商 提供的服务，配置中的 KEY 应该填写 api代理服务商提供的 key，</p>
+    <p>此外，您还需要在配置中额外填写 Proxy API，</p>
+    <p>Proxy API 需要填写完整的地址，这里以 <a href="https://console.closeai-asia.com/">CloseAI</a> 为例，其提供了API
+      Base：<code>https://api.closeai-proxy.xyz</code></p>
+    <p>那么 Proxy API 后面应该填写的就是 <code>https://api.closeai-proxy.xyz/v1/chat/completions</code>，</p>
+    <p style="color: #F44336;">注意：由于您指定了自定义的API，Tampermonkey会对您的跨域请求进行警告，请自行点击授权</p>
+  </ul>
+</ul>
+
 <h2 id="感谢">感谢</h2>
 <ul>
   <li>本脚本是<a href="https://github.com/beijixiaohu/OJBetter">北极小狐仓库</a>的fork版本，对一些功能及样式做了润色。</li>
