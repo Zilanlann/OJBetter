@@ -654,12 +654,15 @@ header .enter-or-register-box, header .languages {
     right: 170px;
 }
 button.html2mdButton.CFBetter_setting {
-    float: right;
-    height: 30px;
-    background: #60a5fa;
-    color: white;
-    margin: 10px;
-    border: 0px;
+    font-family: cuprum,sans-serif!important;
+    font-weight: 400;
+    text-align: center;
+    float: left;
+    list-style: none;
+    color: #000;
+    margin-right: 1.2em;
+    //padding: 0 0 1px;
+    top: 5px;
 }
 
 button.html2mdButton.CFBetter_setting.open {
@@ -3516,10 +3519,12 @@ function saveConfirmation() {
 // 设置按钮面板
 async function settingPanel() {
     // 添加按钮
-    $("div[class='lang-chooser']").each(function () {
-        $(this).before(
-            "<button class='html2mdButton CFBetter_setting'>CodeforcesBetter设置</button>"
-        );
+    $("div[class='menu-list-container']").each(function () {
+        const form = $(this).find("form[method='post'][action='/search']");
+        // 创建按钮元素
+        const button = $("<button class='html2mdButton CFBetter_setting'>CFBetterSetting</button>");
+        // 将按钮插入到form之前
+        form.before(button);
     });
     $("div[class='enter-or-register-box']").each(function () {
         $(this).after(
