@@ -5143,6 +5143,8 @@ var extensionMap = {
 
 // 更新代码提交页的HTML元素
 async function CloneOriginalHTML(submitUrl, cacheKey) {
+// 获取代码提交页的HTML元素
+async function CloneOriginalHTML(submitUrl) {
     return new Promise((resolve, reject) => {
         GM_xmlhttpRequest({
             method: 'GET',
