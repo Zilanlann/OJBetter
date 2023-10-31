@@ -5143,163 +5143,161 @@ var extensionMap = {
 
 // 更新代码提交页的HTML元素
 async function CloneOriginalHTML(submitUrl, cacheKey) {
-    // 获取代码提交页的HTML元素
-    async function CloneOriginalHTML(submitUrl) {
-        return new Promise((resolve, reject) => {
-            GM_xmlhttpRequest({
-                method: 'GET',
-                url: submitUrl,
-                responseType: 'html',
-                onload: function(response) {
-                    const html = response.responseText;
-                    const cloneHTML = $(html);
-                    localStorage.setItem(cacheKey, html);
+    return new Promise((resolve, reject) => {
+        GM_xmlhttpRequest({
+            method: 'GET',
+            url: submitUrl,
+            responseType: 'html',
+            onload: function(response) {
+                const html = response.responseText;
+                const cloneHTML = $(html);
+                localStorage.setItem(cacheKey, html);
 
-                    // 更新，防止为旧的csrf
-                    let _token = cloneHTML.find('form.submit-form').attr('action');
-                    $('#CFBetter_SubmitForm').attr('action', submitUrl + _token);
-                    CF_csrf_token = _token.match(/(?<=\?csrf_token=)[^&]+/)?.[0];
-
-                    resolve(cloneHTML);
-                },
-                onerror: function(response) {
-                    reject('网络错误');
-                }
-            });
-        });
-    }
-
-    // 获取代码提交页的HTML元素
-    async function getSubmitHTML(submitUrl) {
-        const cacheKey = 'CFBetter_CloneOriginalHTML';
-        const cookieKey = 'CFBetter_CloneOriginalHTML_time';
-        if (getCookie(cookieKey) === '1') {
-            // 存在缓存
-            CloneOriginalHTML(submitUrl, cacheKey);
-            // 校验
-            let cloneHTML = $(localStorage.getItem(cacheKey));
-            if (cloneHTML.find('form.submit-form').length > 0) {
-                // 获取csrf_token
+                // 更新，防止为旧的csrf
                 let _token = cloneHTML.find('form.submit-form').attr('action');
+                $('#CFBetter_SubmitForm').attr('action', submitUrl + _token);
                 CF_csrf_token = _token.match(/(?<=\?csrf_token=)[^&]+/)?.[0];
-                return cloneHTML;
-            } else {
-                // 存在错误，更新缓存
-                console.log("%c缓存存在错误，正在尝试更新", "color:blue;")
-                return await CloneOriginalHTML(submitUrl, cacheKey);
-            }
 
+                resolve(cloneHTML);
+            },
+            onerror: function(response) {
+                reject('网络错误');
+            }
+        });
+    });
+}
+
+// 获取代码提交页的HTML元素
+async function getSubmitHTML(submitUrl) {
+    const cacheKey = 'CFBetter_CloneOriginalHTML';
+    const cookieKey = 'CFBetter_CloneOriginalHTML_time';
+    if (getCookie(cookieKey) === '1') {
+        // 存在缓存
+        CloneOriginalHTML(submitUrl, cacheKey);
+        // 校验
+        let cloneHTML = $(localStorage.getItem(cacheKey));
+        if (cloneHTML.find('form.submit-form').length > 0) {
+            // 获取csrf_token
+            let _token = cloneHTML.find('form.submit-form').attr('action');
+            CF_csrf_token = _token.match(/(?<=\?csrf_token=)[^&]+/)?.[0];
+            return cloneHTML;
         } else {
-            // 没有缓存，更新
-            document.cookie = `${cookieKey}=1; path=/`;
+            // 存在错误，更新缓存
+            console.log("%c缓存存在错误，正在尝试更新", "color:blue;")
             return await CloneOriginalHTML(submitUrl, cacheKey);
         }
+
+    } else {
+        // 没有缓存，更新
+        document.cookie = `${cookieKey}=1; path=/`;
+        return await CloneOriginalHTML(submitUrl, cacheKey);
     }
+}
 
-    // 代码自动保存
-    async function saveCode(url, code) {
-        try {
-            await CFBetterDB.editorCode.put({ url, code });
-            return 'Code saved successfully';
-        } catch (error) {
-            throw new Error('Failed to save code');
-        }
+// 代码自动保存
+async function saveCode(url, code) {
+    try {
+        await CFBetterDB.editorCode.put({ url, code });
+        return 'Code saved successfully';
+    } catch (error) {
+        throw new Error('Failed to save code');
     }
+}
 
-    async function getCode(url) {
-        try {
-            const result = await CFBetterDB.editorCode.get(url);
-            return result ? result.code : null;
-        } catch (error) {
-            throw new Error('Failed to get code');
-        }
+async function getCode(url) {
+    try {
+        const result = await CFBetterDB.editorCode.get(url);
+        return result ? result.code : null;
+    } catch (error) {
+        throw new Error('Failed to get code');
     }
+}
 
-    // 创建表单
-    async function CreateCodeDevFrom(submitUrl, cloneHTML) {
-        // 表单
-        var formDiv = $('<form method="post" id="CFBetter_SubmitForm"></form>');
-        $('.ttypography').after(formDiv);
-        let _action = cloneHTML.find('form.submit-form').attr('action');
-        formDiv.attr('action', submitUrl + _action);
+// 创建表单
+async function CreateCodeDevFrom(submitUrl, cloneHTML) {
+    // 表单
+    var formDiv = $('<form method="post" id="CFBetter_SubmitForm"></form>');
+    $('.ttypography').after(formDiv);
+    let _action = cloneHTML.find('form.submit-form').attr('action');
+    formDiv.attr('action', submitUrl + _action);
 
-        // 顶部区域
-        var topDiv = $(`<div style="display:flex;align-items: center;justify-content: space-between;"></div>`)
-        let selectLang = cloneHTML.find('select[name="programTypeId"]'); // 编辑器语言选择
-        selectLang.css({ 'margin': '10px 0px' }).attr('id', 'programTypeId');
-        topDiv.append(selectLang);
-        formDiv.append(topDiv);
+    // 顶部区域
+    var topDiv = $(`<div style="display:flex;align-items: center;justify-content: space-between;"></div>`)
+    let selectLang = cloneHTML.find('select[name="programTypeId"]'); // 编辑器语言选择
+    selectLang.css({ 'margin': '10px 0px' }).attr('id', 'programTypeId');
+    topDiv.append(selectLang);
+    formDiv.append(topDiv);
 
-        // 问题选择/编号
-        var selectProblem = $('<input name="submittedProblemIndex" style="display:none;"></input>');
-        let problemCode;
-        if (is_acmsguru) {
-            problemCode = $('h4').eq(0).text();
-            let matchResult = problemCode.match(/([A-Z])/);
-            problemCode = matchResult[0];
-        } else if (is_problemset_problem) {
-            let match = window.location.href.match(/\/problem\/([0-9]+?)\/([A-Z]+?)$/);
-            problemCode = match[1] + match[2];
-            selectProblem.attr('name', 'submittedProblemCode');
-        } else {
-            problemCode = $('.header .title').eq(0).text();
-            let matchResult = problemCode.match(/([A-Z])/);
-            problemCode = matchResult[0];
-        }
-        selectProblem.val(problemCode);
-        formDiv.append(selectProblem);
+    // 问题选择/编号
+    var selectProblem = $('<input name="submittedProblemIndex" style="display:none;"></input>');
+    let problemCode;
+    if (is_acmsguru) {
+        problemCode = $('h4').eq(0).text();
+        let matchResult = problemCode.match(/([A-Z])/);
+        problemCode = matchResult[0];
+    } else if (is_problemset_problem) {
+        let match = window.location.href.match(/\/problem\/([0-9]+?)\/([A-Z]+?)$/);
+        problemCode = match[1] + match[2];
+        selectProblem.attr('name', 'submittedProblemCode');
+    } else {
+        problemCode = $('.header .title').eq(0).text();
+        let matchResult = problemCode.match(/([A-Z])/);
+        problemCode = matchResult[0];
+    }
+    selectProblem.val(problemCode);
+    formDiv.append(selectProblem);
 
-        // 隐藏的代码记录
-        var sourceDiv = $('<textarea id="sourceCodeTextarea" name="source" style="display: none;"></textarea>');
-        formDiv.append(sourceDiv);
+    // 隐藏的代码记录
+    var sourceDiv = $('<textarea id="sourceCodeTextarea" name="source" style="display: none;"></textarea>');
+    formDiv.append(sourceDiv);
 
-        // 代码编辑器
-        var editorDiv = $('<div id="CFBetter_editor" style="height:600px"></div>');
-        formDiv.append(editorDiv);
-        editor = ace.edit('CFBetter_editor');
-        editor.$blockScrolling = Infinity;// 禁用滚动警告
-        editor.setTheme('ace/theme/textmate'); // 主题
-        editor.setShowPrintMargin(false); // 不显示打印边距
-        editor.setFontSize(parseInt(editorFontSize)); // 字体大小
-        if (keywordAutoComplete) {
-            editor.setOptions({
-                enableBasicAutocompletion: true,
-                enableLiveAutocompletion: true,
-                enableSnippets: true
-            });
-        }
-        editor.setOption("tabSize", parseInt(indentSpacesCount)); // 缩进空格数
-        // tab行为
-        if (howToIndent == "space") editor.setOption("useSoftTabs", true);
-        else editor.setOption("useSoftTabs", false);
-        // 自动换行
-        editor.setOption("wrap", isWrapEnabled ? "free" : "off");
-
-        // 调整字体大小
-        var changeSize = $(`<div><label for="fontSizeInput">字体大小：</label><input type="number" id="fontSizeInput" value="${editorFontSize}"></div>`)
-        topDiv.append(changeSize);
-        changeSize.find('input#fontSizeInput').on('input', function() {
-            var size = $(this).val();
-            editor.setFontSize(parseInt(size));
-            GM_setValue('editorFontSize', size);
+    // 代码编辑器
+    var editorDiv = $('<div id="CFBetter_editor" style="height:600px"></div>');
+    formDiv.append(editorDiv);
+    editor = ace.edit('CFBetter_editor');
+    editor.$blockScrolling = Infinity;// 禁用滚动警告
+    editor.setTheme('ace/theme/textmate'); // 主题
+    editor.setShowPrintMargin(false); // 不显示打印边距
+    editor.setFontSize(parseInt(editorFontSize)); // 字体大小
+    if (keywordAutoComplete) {
+        editor.setOptions({
+            enableBasicAutocompletion: true,
+            enableLiveAutocompletion: true,
+            enableSnippets: true
         });
+    }
+    editor.setOption("tabSize", parseInt(indentSpacesCount)); // 缩进空格数
+    // tab行为
+    if (howToIndent == "space") editor.setOption("useSoftTabs", true);
+    else editor.setOption("useSoftTabs", false);
+    // 自动换行
+    editor.setOption("wrap", isWrapEnabled ? "free" : "off");
 
-        // 代码同步与保存
-        const nowUrl = window.location.href;
-        const code = await getCode(nowUrl);
-        if (code) {
-            editor.setValue(code, 1); // 恢复代码
-            $('#sourceCodeTextarea').val(code);
-        }
-        editor.scrollToRow(editor.session.getLength() - 1); // 滚动到最后一行
-        editor.getSession().on('change', async function() {
-            const code = editor.getValue();
-            $('#sourceCodeTextarea').val(code); // 将ace editor的内容同步到sourceCodeTextarea
-            await saveCode(nowUrl, code);
-        });
+    // 调整字体大小
+    var changeSize = $(`<div><label for="fontSizeInput">字体大小：</label><input type="number" id="fontSizeInput" value="${editorFontSize}"></div>`)
+    topDiv.append(changeSize);
+    changeSize.find('input#fontSizeInput').on('input', function() {
+        var size = $(this).val();
+        editor.setFontSize(parseInt(size));
+        GM_setValue('editorFontSize', size);
+    });
 
-        // 自定义调试
-        var customTestDiv = $(`
+    // 代码同步与保存
+    const nowUrl = window.location.href;
+    const code = await getCode(nowUrl);
+    if (code) {
+        editor.setValue(code, 1); // 恢复代码
+        $('#sourceCodeTextarea').val(code);
+    }
+    editor.scrollToRow(editor.session.getLength() - 1); // 滚动到最后一行
+    editor.getSession().on('change', async function() {
+        const code = editor.getValue();
+        $('#sourceCodeTextarea').val(code); // 将ace editor的内容同步到sourceCodeTextarea
+        await saveCode(nowUrl, code);
+    });
+
+    // 自定义调试
+    var customTestDiv = $(`
         <details id="customTestBlock">
             <summary >自定义测试数据(自动保存)</summary>
             <div id="customTests" style="min-height: 30px;"></div>
@@ -5317,855 +5315,855 @@ async function CloneOriginalHTML(submitUrl, cacheKey) {
             </div>
         </details>
     `)
-        formDiv.append(customTestDiv);
+    formDiv.append(customTestDiv);
 
-        // 调试/提交
-        var submitDiv = $('<div id="CFBetter_submitDiv"></div>');
-        var CompilerSetting = $('<div id="CompilerSetting"><input type="text" id="CompilerArgsInput"></div>');
-        submitDiv.append(CompilerSetting);
-        var runButton = $('<button class="CFBetter_SubmitButton" id="RunTestButton">样例测试</button>');
-        submitDiv.append(runButton);
-        var submitButton = $('<input class="CFBetter_SubmitButton" id="SubmitButton" type="submit" value="提交">');
-        submitDiv.append(submitButton);
-        formDiv.append(submitDiv);
+    // 调试/提交
+    var submitDiv = $('<div id="CFBetter_submitDiv"></div>');
+    var CompilerSetting = $('<div id="CompilerSetting"><input type="text" id="CompilerArgsInput"></div>');
+    submitDiv.append(CompilerSetting);
+    var runButton = $('<button class="CFBetter_SubmitButton" id="RunTestButton">样例测试</button>');
+    submitDiv.append(runButton);
+    var submitButton = $('<input class="CFBetter_SubmitButton" id="SubmitButton" type="submit" value="提交">');
+    submitDiv.append(submitButton);
+    formDiv.append(submitDiv);
 
-        var from = {
-            formDiv: formDiv,
-            selectLang: selectLang,
-            sourceDiv: sourceDiv,
-            editor: editor,
-            runButton: runButton,
-            submitButton: submitButton,
-            submitDiv: submitDiv
-        };
-        return from;
-    }
+    var from = {
+        formDiv: formDiv,
+        selectLang: selectLang,
+        sourceDiv: sourceDiv,
+        editor: editor,
+        runButton: runButton,
+        submitButton: submitButton,
+        submitDiv: submitDiv
+    };
+    return from;
+}
 
-    // 语言更改
-    function changeAceLanguage(selectLang, editor) {
-        let nowSelect = selectLang.val();
-        // 记忆更改
-        GM_setValue('compilerSelection', nowSelect);
-        // 编辑器
-        var filePath = extensionMap[nowSelect];
-        var modelist = ace.require("ace/ext/modelist");
-        var mode = modelist.getModeForPath(filePath).mode;
-        editor.session.setMode(mode);
-        // 调试器
-        changeCompilerArgs(nowSelect);
-    }
+// 语言更改
+function changeAceLanguage(selectLang, editor) {
+    let nowSelect = selectLang.val();
+    // 记忆更改
+    GM_setValue('compilerSelection', nowSelect);
+    // 编辑器
+    var filePath = extensionMap[nowSelect];
+    var modelist = ace.require("ace/ext/modelist");
+    var mode = modelist.getModeForPath(filePath).mode;
+    editor.session.setMode(mode);
+    // 调试器
+    changeCompilerArgs(nowSelect);
+}
 
-    // 自动补全器更新
-    function updateAutocomplete() {
-        if (!keywordAutoComplete) return;
-        let extraCompleters = [];
-        let langTools = ace.require('ace/ext/language_tools');
-        if (editor.getSession().getMode().$id === "ace/mode/c_cpp") {
-            extraCompleters.push(langTools.textCompleter); // 本地补全
-            if (cppCodeTemplateComplete) extraCompleters.push(CODE_COMPLETER); // acwing补全规则
-            else {
-                extraCompleters.push(langTools.keyWordCompleter);
-                extraCompleters.push(langTools.snippetCompleter);
-            }
-            editor.completers = extraCompleters;
-        } else {
-            extraCompleters.push(langTools.textCompleter);
+// 自动补全器更新
+function updateAutocomplete() {
+    if (!keywordAutoComplete) return;
+    let extraCompleters = [];
+    let langTools = ace.require('ace/ext/language_tools');
+    if (editor.getSession().getMode().$id === "ace/mode/c_cpp") {
+        extraCompleters.push(langTools.textCompleter); // 本地补全
+        if (cppCodeTemplateComplete) extraCompleters.push(CODE_COMPLETER); // acwing补全规则
+        else {
             extraCompleters.push(langTools.keyWordCompleter);
             extraCompleters.push(langTools.snippetCompleter);
-            editor.completers = extraCompleters;
         }
+        editor.completers = extraCompleters;
+    } else {
+        extraCompleters.push(langTools.textCompleter);
+        extraCompleters.push(langTools.keyWordCompleter);
+        extraCompleters.push(langTools.snippetCompleter);
+        editor.completers = extraCompleters;
     }
+}
 
-    // 收集样例数据
-    function collectTestData() {
-        var testData = {};
+// 收集样例数据
+function collectTestData() {
+    var testData = {};
 
-        $('.input').each(function(index) {
-            var inputText = '';
-            if ($(this).find('pre').find('div').length > 0) {
-                $(this).find('pre').find('div').each(function() {
-                    inputText += $(this).text() + '\n';
-                });
-            } else {
-                inputText = $(this).find('pre').text();
-            }
-            var outputText = '';
-            if ($('.output').eq(index).find('pre').find('div').length > 0) {
-                $('.output').eq(index).find('pre').find('div').each(function() {
-                    inputText += $(this).text() + '\n';
-                });
-            } else {
-                outputText = $('.output').eq(index).find('pre').text();
-            }
+    $('.input').each(function(index) {
+        var inputText = '';
+        if ($(this).find('pre').find('div').length > 0) {
+            $(this).find('pre').find('div').each(function() {
+                inputText += $(this).text() + '\n';
+            });
+        } else {
+            inputText = $(this).find('pre').text();
+        }
+        var outputText = '';
+        if ($('.output').eq(index).find('pre').find('div').length > 0) {
+            $('.output').eq(index).find('pre').find('div').each(function() {
+                inputText += $(this).text() + '\n';
+            });
+        } else {
+            outputText = $('.output').eq(index).find('pre').text();
+        }
 
-            testData[index + 1] = {
-                input: inputText.trim(),
-                output: outputText.trim()
+        testData[index + 1] = {
+            input: inputText.trim(),
+            output: outputText.trim()
+        };
+    });
+
+    return testData;
+}
+
+// 初始化自定义测试数据面板
+function CustomTestInit() {
+    const url = window.location.href;
+
+    restoreText();
+
+    // 添加
+    $('#addCustomTest').click(function() {
+        var sampleDiv = $('<div class="sampleDiv">');
+        var inputTextarea = $('<p style="padding: 0px 5px;">input</p><textarea class="dynamicTextarea inputTextarea"></textarea>');
+        var outputTextarea = $('<p style="padding: 0px 5px;">output</p><textarea class="dynamicTextarea outputTextarea"></textarea>');
+        var deleteCustomTest = $(`<button type="button" class="deleteCustomTest">${closeIcon}</button>`);
+        sampleDiv.append(deleteCustomTest);
+        sampleDiv.append(inputTextarea);
+        sampleDiv.append(outputTextarea);
+        $('#customTests').append(sampleDiv);
+    });
+
+    // 实时保存文本内容到 IndexedDB 中
+    $(document).on('input', '.inputTextarea, .outputTextarea', function() {
+        CFBetterDB.transaction('rw', CFBetterDB.samplesData, function() {
+            var objectStore = CFBetterDB.samplesData;
+            var samples = {
+                url: url,
+                samples: []
             };
-        });
-
-        return testData;
-    }
-
-    // 初始化自定义测试数据面板
-    function CustomTestInit() {
-        const url = window.location.href;
-
-        restoreText();
-
-        // 添加
-        $('#addCustomTest').click(function() {
-            var sampleDiv = $('<div class="sampleDiv">');
-            var inputTextarea = $('<p style="padding: 0px 5px;">input</p><textarea class="dynamicTextarea inputTextarea"></textarea>');
-            var outputTextarea = $('<p style="padding: 0px 5px;">output</p><textarea class="dynamicTextarea outputTextarea"></textarea>');
-            var deleteCustomTest = $(`<button type="button" class="deleteCustomTest">${closeIcon}</button>`);
-            sampleDiv.append(deleteCustomTest);
-            sampleDiv.append(inputTextarea);
-            sampleDiv.append(outputTextarea);
-            $('#customTests').append(sampleDiv);
-        });
-
-        // 实时保存文本内容到 IndexedDB 中
-        $(document).on('input', '.inputTextarea, .outputTextarea', function() {
-            CFBetterDB.transaction('rw', CFBetterDB.samplesData, function() {
-                var objectStore = CFBetterDB.samplesData;
-                var samples = {
-                    url: url,
-                    samples: []
+            var index = 0;
+            $('.sampleDiv').each(function() {
+                var $sampleDiv = $(this);
+                var inputTextarea = $sampleDiv.find('.inputTextarea');
+                var outputTextarea = $sampleDiv.find('.outputTextarea');
+                $sampleDiv.attr('data-index', index);
+                inputTextarea.attr('id', 'input' + index);
+                outputTextarea.attr('id', 'output' + index);
+                var sample = {
+                    id: index,
+                    input: inputTextarea.val(),
+                    output: outputTextarea.val()
                 };
-                var index = 0;
-                $('.sampleDiv').each(function() {
-                    var $sampleDiv = $(this);
-                    var inputTextarea = $sampleDiv.find('.inputTextarea');
-                    var outputTextarea = $sampleDiv.find('.outputTextarea');
-                    $sampleDiv.attr('data-index', index);
-                    inputTextarea.attr('id', 'input' + index);
-                    outputTextarea.attr('id', 'output' + index);
-                    var sample = {
-                        id: index,
-                        input: inputTextarea.val(),
-                        output: outputTextarea.val()
+                samples.samples.push(sample);
+                index++;
+            });
+            objectStore.put(samples);
+        });
+    });
+
+    // 删除
+    $(document).on('click', '.deleteCustomTest', function() {
+        var $sampleDiv = $(this).closest('.sampleDiv');
+        CFBetterDB.transaction('rw', CFBetterDB.samplesData, function() {
+            var objectStore = CFBetterDB.samplesData;
+            var index = parseInt($sampleDiv.attr('data-index'));
+            if (!isNaN(index)) {
+                objectStore.get(url).then(row => {
+                    let samples = row.samples;
+                    samples.splice(index, 1); // 移除第index个元素
+                    objectStore.put({
+                        url: url,
+                        samples: samples
+                    });
+                })
+            }
+            $sampleDiv.remove();
+        });
+    });
+
+    // 恢复保存的内容
+    function restoreText() {
+        CFBetterDB.transaction('r', CFBetterDB.samplesData, function() {
+            return CFBetterDB.samplesData.get(url);
+        }).then(function(data) {
+            if (data.samples && data.samples.length > 0) {
+                data.samples.forEach(function(item, index) {
+                    var sampleDiv = $('<div class="sampleDiv">');
+                    var inputTextarea = $(`<p style="padding: 0px 5px;">input</p><textarea id="input${index}" class="dynamicTextarea inputTextarea"></textarea>`);
+                    var outputTextarea = $(`<p style="padding: 0px 5px;">output</p><textarea id="output${index}" class="dynamicTextarea outputTextarea"></textarea>`);
+                    var deleteCustomTest = $(`<button type="button" class="deleteCustomTest">${closeIcon}</button>`);
+
+                    inputTextarea.val(item.input);
+                    outputTextarea.val(item.output);
+
+                    sampleDiv.append(deleteCustomTest);
+                    sampleDiv.append(inputTextarea);
+                    sampleDiv.append(outputTextarea);
+                    sampleDiv.attr('data-index', index)
+                    $('#customTests').append(sampleDiv);
+                });
+            }
+        });
+    }
+}
+
+// 获取自定义测试数据
+function getCustomTestData() {
+    const url = window.location.href;
+
+    return new Promise(function(resolve) {
+        var customTestData = {};
+        CFBetterDB.transaction('r', CFBetterDB.samplesData, function() {
+            return CFBetterDB.samplesData.get(url);
+        }).then(function(data) {
+            if (!data) resolve(customTestData);
+            if (data.samples && data.samples.length > 0) {
+                data.samples.forEach(function(item, index) {
+                    customTestData[index + 1] = {
+                        input: item.input,
+                        output: item.output
                     };
-                    samples.samples.push(sample);
-                    index++;
                 });
-                objectStore.put(samples);
-            });
+            }
+            resolve(customTestData);
         });
+    });
+}
 
-        // 删除
-        $(document).on('click', '.deleteCustomTest', function() {
-            var $sampleDiv = $(this).closest('.sampleDiv');
-            CFBetterDB.transaction('rw', CFBetterDB.samplesData, function() {
-                var objectStore = CFBetterDB.samplesData;
-                var index = parseInt($sampleDiv.attr('data-index'));
-                if (!isNaN(index)) {
-                    objectStore.get(url).then(row => {
-                        let samples = row.samples;
-                        samples.splice(index, 1); // 移除第index个元素
-                        objectStore.put({
-                            url: url,
-                            samples: samples
-                        });
-                    })
-                }
-                $sampleDiv.remove();
-            });
-        });
+// codeforces编译器参数列表
+let officialLanguage = "";
+function officialCompilerArgsChange(nowSelect) {
+    officialLanguage = nowSelect;
+    $('#CompilerArgsInput').prop("disabled", true);
+}
 
-        // 恢复保存的内容
-        function restoreText() {
-            CFBetterDB.transaction('r', CFBetterDB.samplesData, function() {
-                return CFBetterDB.samplesData.get(url);
-            }).then(function(data) {
-                if (data.samples && data.samples.length > 0) {
-                    data.samples.forEach(function(item, index) {
-                        var sampleDiv = $('<div class="sampleDiv">');
-                        var inputTextarea = $(`<p style="padding: 0px 5px;">input</p><textarea id="input${index}" class="dynamicTextarea inputTextarea"></textarea>`);
-                        var outputTextarea = $(`<p style="padding: 0px 5px;">output</p><textarea id="output${index}" class="dynamicTextarea outputTextarea"></textarea>`);
-                        var deleteCustomTest = $(`<button type="button" class="deleteCustomTest">${closeIcon}</button>`);
+// codeforces编译器通信
+async function officialCompiler(code, input) {
+    var data = new FormData();
+    data.append('csrf_token', CF_csrf_token);
+    data.append('source', code);
+    data.append('tabSize', '4');
+    data.append('programTypeId', officialLanguage);
+    data.append('input', input);
+    data.append('output', '');
+    data.append('communityCode', '');
+    data.append('action', 'submitSourceCode');
+    data.append('programTypeId', officialLanguage);
+    data.append('sourceCode', code);
+    var result = {
+        Errors: '',
+        Result: '',
+        Stats: ''
+    };
 
-                        inputTextarea.val(item.input);
-                        outputTextarea.val(item.output);
-
-                        sampleDiv.append(deleteCustomTest);
-                        sampleDiv.append(inputTextarea);
-                        sampleDiv.append(outputTextarea);
-                        sampleDiv.attr('data-index', index)
-                        $('#customTests').append(sampleDiv);
-                    });
-                }
-            });
-        }
-    }
-
-    // 获取自定义测试数据
-    function getCustomTestData() {
-        const url = window.location.href;
-
-        return new Promise(function(resolve) {
-            var customTestData = {};
-            CFBetterDB.transaction('r', CFBetterDB.samplesData, function() {
-                return CFBetterDB.samplesData.get(url);
-            }).then(function(data) {
-                if (!data) resolve(customTestData);
-                if (data.samples && data.samples.length > 0) {
-                    data.samples.forEach(function(item, index) {
-                        customTestData[index + 1] = {
-                            input: item.input,
-                            output: item.output
-                        };
-                    });
-                }
-                resolve(customTestData);
-            });
-        });
-    }
-
-    // codeforces编译器参数列表
-    let officialLanguage = "";
-    function officialCompilerArgsChange(nowSelect) {
-        officialLanguage = nowSelect;
-        $('#CompilerArgsInput').prop("disabled", true);
-    }
-
-    // codeforces编译器通信
-    async function officialCompiler(code, input) {
-        var data = new FormData();
-        data.append('csrf_token', CF_csrf_token);
-        data.append('source', code);
-        data.append('tabSize', '4');
-        data.append('programTypeId', officialLanguage);
-        data.append('input', input);
-        data.append('output', '');
-        data.append('communityCode', '');
-        data.append('action', 'submitSourceCode');
-        data.append('programTypeId', officialLanguage);
-        data.append('sourceCode', code);
-        var result = {
-            Errors: '',
-            Result: '',
-            Stats: ''
-        };
-
-        return new Promise((resolve, reject) => {
-            GM_xmlhttpRequest({
-                method: 'POST',
-                url: hostAddress + '/data/customtest',
-                data: data,
-                headers: {
-                    'X-Csrf-Token': CF_csrf_token
-                },
-                onload: function(responseDetails) {
-                    if (responseDetails.status !== 200 || !responseDetails.response) {
-                        result.Errors = `提交代码到 codeforces 服务器时发生了错误，请重试 ${findHelpText}`;
-                        resolve(result);
-                    } else {
-                        try {
-                            const response = JSON.parse(responseDetails.response);
-                            resolve(response.customTestSubmitId);
-                        } catch (error) {
-                            result.Errors = `解析响应数据 customTestSubmitId 时发生了错误，请重试 ${findHelpText}`;
-                            resolve(result);
-                        }
-                    }
-                },
-                onerror: function() {
-                    result.Errors = '请求 customTestSubmitId 时网络错误';
+    return new Promise((resolve, reject) => {
+        GM_xmlhttpRequest({
+            method: 'POST',
+            url: hostAddress + '/data/customtest',
+            data: data,
+            headers: {
+                'X-Csrf-Token': CF_csrf_token
+            },
+            onload: function(responseDetails) {
+                if (responseDetails.status !== 200 || !responseDetails.response) {
+                    result.Errors = `提交代码到 codeforces 服务器时发生了错误，请重试 ${findHelpText}`;
                     resolve(result);
+                } else {
+                    try {
+                        const response = JSON.parse(responseDetails.response);
+                        resolve(response.customTestSubmitId);
+                    } catch (error) {
+                        result.Errors = `解析响应数据 customTestSubmitId 时发生了错误，请重试 ${findHelpText}`;
+                        resolve(result);
+                    }
                 }
-            });
-        }).then(customTestSubmitId => {
-            if (result.Errors !== '') return result; // 产生了错误，直接返回
-            return new Promise((resolve, reject) => {
-                let retryCount = 0;
-                var newdata = new FormData();
-                newdata.append('csrf_token', CF_csrf_token);
-                newdata.append('action', 'getVerdict');
-                newdata.append('customTestSubmitId', customTestSubmitId);
-                function makeRequest() {
-                    GM_xmlhttpRequest({
-                        method: 'POST',
-                        url: hostAddress + '/data/customtest',
-                        data: newdata,
-                        headers: {
-                            'X-Csrf-Token': CF_csrf_token
-                        },
-                        onload: function(responseDetails) {
-                            if (responseDetails.status !== 200 || !responseDetails.response) {
-                                result.Errors = `请求运行结果时发生了错误，请重试 ${findHelpText}`;
-                                resolve(result);
-                            } else {
-                                try {
-                                    const response = JSON.parse(responseDetails.response);
-                                    if (!response.stat && retryCount < 10) {
-                                        retryCount++;
-                                        setTimeout(makeRequest, 1000);
-                                    } else if (retryCount >= 5) {
-                                        result.Errors = `结果获取已超时，请重试 ${findHelpText}`;
-                                        resolve(result);
-                                    } else {
-                                        const result = {
-                                            Errors: response.verdict == "OK" ? null : response.verdict + '<br>' + response.output,
-                                            Result: response.output.replace(/\r\n/g, "\n"),
-                                            Stats: `Status: ${response.stat}`
-                                        };
-                                        resolve(result);
-                                    }
-                                } catch (error) {
-                                    result.Errors = '请求运行结果时响应数据解析错误';
+            },
+            onerror: function() {
+                result.Errors = '请求 customTestSubmitId 时网络错误';
+                resolve(result);
+            }
+        });
+    }).then(customTestSubmitId => {
+        if (result.Errors !== '') return result; // 产生了错误，直接返回
+        return new Promise((resolve, reject) => {
+            let retryCount = 0;
+            var newdata = new FormData();
+            newdata.append('csrf_token', CF_csrf_token);
+            newdata.append('action', 'getVerdict');
+            newdata.append('customTestSubmitId', customTestSubmitId);
+            function makeRequest() {
+                GM_xmlhttpRequest({
+                    method: 'POST',
+                    url: hostAddress + '/data/customtest',
+                    data: newdata,
+                    headers: {
+                        'X-Csrf-Token': CF_csrf_token
+                    },
+                    onload: function(responseDetails) {
+                        if (responseDetails.status !== 200 || !responseDetails.response) {
+                            result.Errors = `请求运行结果时发生了错误，请重试 ${findHelpText}`;
+                            resolve(result);
+                        } else {
+                            try {
+                                const response = JSON.parse(responseDetails.response);
+                                if (!response.stat && retryCount < 10) {
+                                    retryCount++;
+                                    setTimeout(makeRequest, 1000);
+                                } else if (retryCount >= 5) {
+                                    result.Errors = `结果获取已超时，请重试 ${findHelpText}`;
+                                    resolve(result);
+                                } else {
+                                    const result = {
+                                        Errors: response.verdict == "OK" ? null : response.verdict + '<br>' + response.output,
+                                        Result: response.output.replace(/\r\n/g, "\n"),
+                                        Stats: `Status: ${response.stat}`
+                                    };
                                     resolve(result);
                                 }
-                            }
-                        },
-                        onerror: function() {
-                            result.Errors = '请求运行结果时网络错误';
-                            resolve(result);
-                        }
-                    });
-                }
-
-                makeRequest();
-            });
-        });
-    }
-
-    // rextester编译器参数列表
-    let rextesterLanguage = "", rextesterCompilerArgs = "";
-    function rextesterCompilerArgsChange(nowSelect) {
-        let LanguageChoiceList = {
-            "4": "9", "6": "8", "7": "5", "9": "1", "13": "13", "19": "42", "20": "21", "28": "30", "31": "24", "32": "20",
-            "34": "17", "36": "4", "43": "6", "45": "7", "46": "4", "50": "7", "51": "9", "52": "27", "54": "7", "55": "23", "60": "4",
-            "61": "7", "65": "1", "67": "12", "70": "5", "73": "7", "74": "4", "75": "46", "77": "43", "79": "1", "80": "27", "83": "43", "87": "4"
-        }
-        let CompilerArgsList = {
-            "6": "-Wall -std=gnu99 -O2 -o a.out source_file.c",
-            "7": "-Wall -std=c++14 -O2 -o a.out source_file.cpp",
-            "20": "-o a.out source_file.go",
-            "27": "-Wall -std=c++14 -stdlib=libc++ -O2 -o a.out source_file.cpp",
-            "30": "source_file.d -ofa.out"
-        }
-        if (nowSelect in LanguageChoiceList) {
-            $('#RunTestButton').prop("disabled", false);
-            rextesterLanguage = LanguageChoiceList[nowSelect];
-        } else {
-            $('#RunTestButton').prop("disabled", true);
-        }
-        if (rextesterLanguage in CompilerArgsList) {
-            rextesterCompilerArgs = CompilerArgsList[rextesterLanguage];
-            $('#CompilerArgsInput').val(rextesterCompilerArgs);
-        } else {
-            $('#CompilerArgsInput').val("");
-        }
-    }
-
-    // rextester编译器通信
-    async function rextesterCompiler(code, input) {
-        var data = new FormData();
-        data.append('LanguageChoiceWrapper', rextesterLanguage);
-        data.append('EditorChoiceWrapper', '1');
-        data.append('LayoutChoiceWrapper', '1');
-        data.append('Program', code);
-        data.append('CompilerArgs', rextesterCompilerArgs);
-        data.append('Input', input);
-        data.append('ShowWarnings', 'false');
-        data.append('IsInEditMode', 'false');
-        data.append('IsLive', 'false');
-        var result = {
-            Errors: '',
-            Result: '',
-            Stats: ''
-        };
-
-        return new Promise((resolve, reject) => {
-            GM_xmlhttpRequest({
-                method: 'POST',
-                url: 'https://rextester.com/rundotnet/Run',
-                data: data,
-                onload: function(responseDetails) {
-                    if (responseDetails.status !== 200 || !responseDetails.response) {
-                        result.Errors = `发生了未知的错误，请重试 ${findHelpText}`;
-                        resolve(result);
-                    } else {
-                        try {
-                            const response = JSON.parse(responseDetails.response);
-                            result.Errors = response.Errors;
-                            result.Result = response.Result;
-                            result.Stats = response.Stats;
-                            resolve(result);
-                        } catch (error) {
-                            result.Errors = '响应数据解析错误';
-                            resolve(result);
-                        }
-                    }
-                },
-                onerror: function() {
-                    result.Errors = '网络错误';
-                    resolve(result);
-                }
-            });
-        });
-    }
-
-    // codechef编译器参数列表
-    let codechefLanguage = "";
-    function codechefCompilerArgsChange(nowSelect) {
-        let LanguageChoiceList = {
-            "6": "29", "9": "27", "32": "114", "34": "56", "36": "10", "41": "109", "43": "44", "50": "44",
-            "52": "63", "54": "63", "60": "10", "61": "63", "65": "27", "70": "109", "73": "63", "74": "10", "75": "93", "77": "47",
-            "79": "27", "80": "63", "83": "47", "87": "10"
-        }
-        if (nowSelect in LanguageChoiceList) {
-            $('#RunTestButton').prop("disabled", false);
-            codechefLanguage = LanguageChoiceList[nowSelect];
-        } else {
-            $('#RunTestButton').prop("disabled", true);
-        }
-        $('#CompilerArgsInput').prop('disabled', true);
-    }
-
-    // codechef编译器通信
-    async function codechefCompiler(code, input) {
-        const data = new URLSearchParams();
-        data.append('sourceCode', code);
-        data.append('language', codechefLanguage);
-        data.append('input', input);
-        var result = {
-            Errors: '',
-            Result: '',
-            Stats: ''
-        };
-        return new Promise((resolve, reject) => {
-            GM_xmlhttpRequest({
-                method: 'POST',
-                url: 'https://www.codechef.com/api/ide/run/all',
-                data: data.toString(),
-                headers: {
-                    'Accept': 'application/json, text/javascript, */*; q=0.01',
-                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                    'X-Csrf-Token': codecheCsrfToken
-                },
-                onload: function(responseDetails) {
-                    if (responseDetails.status !== 200 || !responseDetails.response) {
-                        result.Errors = `提交代码到 codechef 服务器时发生了错误，请重试 ${findHelpText}`;
-                        resolve(result);
-                    } else {
-                        try {
-                            const response = JSON.parse(responseDetails.response);
-                            resolve(response.timestamp);
-                        } catch (error) {
-                            result.Errors = `解析响应数据 timestamp 时发生了错误，请重试 ${findHelpText}`;
-                            resolve(result);
-                        }
-                    }
-                },
-                onerror: function() {
-                    result.Errors = '请求 timestamp 时网络错误';
-                    resolve(result);
-                }
-            });
-        }).then(timestamp => {
-            if (result.Errors !== '') return result; // 产生了错误，直接返回
-            return new Promise((resolve, reject) => {
-                let retryCount = 0;
-
-                function makeRequest() {
-                    GM_xmlhttpRequest({
-                        method: 'GET',
-                        url: `https://www.codechef.com/api/ide/run/all?timestamp=${timestamp}`,
-                        headers: {
-                            'Accept': 'application/json, text/javascript, */*; q=0.01',
-                            'X-Csrf-Token': codecheCsrfToken
-                        },
-                        onload: function(responseDetails) {
-                            if (responseDetails.status !== 200 || !responseDetails.response) {
-                                result.Errors = `请求运行结果时发生了错误，请重试 ${findHelpText}`;
+                            } catch (error) {
+                                result.Errors = '请求运行结果时响应数据解析错误';
                                 resolve(result);
-                            } else {
-                                try {
-                                    const response = JSON.parse(responseDetails.response);
-                                    if (response.result === 0 && retryCount < 5) {
-                                        retryCount++;
-                                        setTimeout(makeRequest, 500);
-                                    } else if (retryCount >= 5) {
-                                        result.Errors = `结果获取已超时，请重试 ${findHelpText}`;
-                                        resolve(result);
-                                    } else {
-                                        const result = {
-                                            Errors: response.stderr == "" ? null : response.stderr,
-                                            Result: response.output,
-                                            Stats: `Status: ${response.status} Time: ${response.time} Mem: ${response.memory} kB`
-                                        };
-                                        resolve(result);
-                                    }
-                                } catch (error) {
-                                    result.Errors = '请求运行结果时响应数据解析错误';
-                                    resolve(result);
-                                }
                             }
-                        },
-                        onerror: function() {
-                            result.Errors = '请求运行结果时网络错误';
-                            resolve(result);
                         }
-                    });
-                }
-
-                makeRequest();
-            });
-        });
-    }
-
-    // wandbox编译器参数列表
-    var wandboxlist = JSON.parse(GM_getResourceText("wandboxlist"));
-    function wandboxCompilerArgsChange(nowSelect) {
-        let LanguageChoiceList = {
-            "6": "PHP", "7": "Python", "9": "C#", "12": "Haskell", "13": "Perl", "19": "OCaml",
-            "20": "Scala", "28": "D", "31": "Python", "32": "Go", "34": "JavaScript", "36": "Java", "40": "Python", "41": "Python",
-            "43": "C++", "50": "C++", "51": "Pascal", "52": "C++", "54": "C++", "60": "Java", "61": "C++", "65": "C#", "67": "Ruby",
-            "70": "Python", "73": "C++", "74": "Java", "75": "Rust", "79": "C#", "80": "C++", "87": "Java"
-        }
-        if (nowSelect in LanguageChoiceList) {
-            $('#RunTestButton').prop("disabled", false);
-            const Languagefiltered = wandboxlist.filter(obj => obj.language === LanguageChoiceList[nowSelect]);
-
-            // 创建编辑器下拉框
-            var CompilerChange = $('<select id="CompilerChange" style="width: 100%;"></select>');
-            $('#CompilerSetting').append(CompilerChange);
-            for (let i = 0; i < Languagefiltered.length; i++) {
-                let Compiler = Languagefiltered[i];
-                let op = $("<option></option>")
-                    .val(Compiler.name)
-                    .text(Compiler["display-name"] + " " + Compiler.version);
-                $("#CompilerChange").append(op);
-            }
-
-            // 编辑器参数刷新
-            function refreshCompilerArgs() {
-                var flags = '';
-                $("#CompilerBox").find("*").each(function() {
-                    if ($(this).is("input[type='checkbox']")) {
-                        let flag = $(this).prop("checked") ? $(this).val() : '';
-                        flags += flag + (flag ? ' ' : '');
-                    } else if ($(this).is("select") || $(this).is("input") || $(this).is("textarea")) {
-                        let flag = $(this).val();
-                        flags += flag + (flag ? ' ' : '');
+                    },
+                    onerror: function() {
+                        result.Errors = '请求运行结果时网络错误';
+                        resolve(result);
                     }
                 });
-                $("#CompilerArgsInput").val(flags);
-                $("#CompilerArgsInput").prop("readonly", true); // 只读
             }
 
-            // 编辑器切换监听
-            CompilerChange.change(function() {
-                let selectedName = $(this).val();
-                let Compiler = Languagefiltered.find(
-                    (obj) => obj.name === selectedName
-                );
+            makeRequest();
+        });
+    });
+}
 
-                $("#CompilerArgsInput").val(); // 初始化编译器输入框
+// rextester编译器参数列表
+let rextesterLanguage = "", rextesterCompilerArgs = "";
+function rextesterCompilerArgsChange(nowSelect) {
+    let LanguageChoiceList = {
+        "4": "9", "6": "8", "7": "5", "9": "1", "13": "13", "19": "42", "20": "21", "28": "30", "31": "24", "32": "20",
+        "34": "17", "36": "4", "43": "6", "45": "7", "46": "4", "50": "7", "51": "9", "52": "27", "54": "7", "55": "23", "60": "4",
+        "61": "7", "65": "1", "67": "12", "70": "5", "73": "7", "74": "4", "75": "46", "77": "43", "79": "1", "80": "27", "83": "43", "87": "4"
+    }
+    let CompilerArgsList = {
+        "6": "-Wall -std=gnu99 -O2 -o a.out source_file.c",
+        "7": "-Wall -std=c++14 -O2 -o a.out source_file.cpp",
+        "20": "-o a.out source_file.go",
+        "27": "-Wall -std=c++14 -stdlib=libc++ -O2 -o a.out source_file.cpp",
+        "30": "source_file.d -ofa.out"
+    }
+    if (nowSelect in LanguageChoiceList) {
+        $('#RunTestButton').prop("disabled", false);
+        rextesterLanguage = LanguageChoiceList[nowSelect];
+    } else {
+        $('#RunTestButton').prop("disabled", true);
+    }
+    if (rextesterLanguage in CompilerArgsList) {
+        rextesterCompilerArgs = CompilerArgsList[rextesterLanguage];
+        $('#CompilerArgsInput').val(rextesterCompilerArgs);
+    } else {
+        $('#CompilerArgsInput').val("");
+    }
+}
 
-                $("#CompilerBox").remove();
-                let div = $("<div id='CompilerBox'></div>");
+// rextester编译器通信
+async function rextesterCompiler(code, input) {
+    var data = new FormData();
+    data.append('LanguageChoiceWrapper', rextesterLanguage);
+    data.append('EditorChoiceWrapper', '1');
+    data.append('LayoutChoiceWrapper', '1');
+    data.append('Program', code);
+    data.append('CompilerArgs', rextesterCompilerArgs);
+    data.append('Input', input);
+    data.append('ShowWarnings', 'false');
+    data.append('IsInEditMode', 'false');
+    data.append('IsLive', 'false');
+    var result = {
+        Errors: '',
+        Result: '',
+        Stats: ''
+    };
 
-                let display_compile_command = $(`<input id='${Compiler.name}' value='${Compiler['display-compile-command']}' style="display:none;"}></input>`);
-                div.append(display_compile_command);
+    return new Promise((resolve, reject) => {
+        GM_xmlhttpRequest({
+            method: 'POST',
+            url: 'https://rextester.com/rundotnet/Run',
+            data: data,
+            onload: function(responseDetails) {
+                if (responseDetails.status !== 200 || !responseDetails.response) {
+                    result.Errors = `发生了未知的错误，请重试 ${findHelpText}`;
+                    resolve(result);
+                } else {
+                    try {
+                        const response = JSON.parse(responseDetails.response);
+                        result.Errors = response.Errors;
+                        result.Result = response.Result;
+                        result.Stats = response.Stats;
+                        resolve(result);
+                    } catch (error) {
+                        result.Errors = '响应数据解析错误';
+                        resolve(result);
+                    }
+                }
+            },
+            onerror: function() {
+                result.Errors = '网络错误';
+                resolve(result);
+            }
+        });
+    });
+}
 
-                let switches = Compiler.switches;
-                for (let i = 0; i < switches.length; i++) {
-                    let switche = switches[i];
+// codechef编译器参数列表
+let codechefLanguage = "";
+function codechefCompilerArgsChange(nowSelect) {
+    let LanguageChoiceList = {
+        "6": "29", "9": "27", "32": "114", "34": "56", "36": "10", "41": "109", "43": "44", "50": "44",
+        "52": "63", "54": "63", "60": "10", "61": "63", "65": "27", "70": "109", "73": "63", "74": "10", "75": "93", "77": "47",
+        "79": "27", "80": "63", "83": "47", "87": "10"
+    }
+    if (nowSelect in LanguageChoiceList) {
+        $('#RunTestButton').prop("disabled", false);
+        codechefLanguage = LanguageChoiceList[nowSelect];
+    } else {
+        $('#RunTestButton').prop("disabled", true);
+    }
+    $('#CompilerArgsInput').prop('disabled', true);
+}
 
-                    if (switche.type == "single") {
-                        let single = $(`
+// codechef编译器通信
+async function codechefCompiler(code, input) {
+    const data = new URLSearchParams();
+    data.append('sourceCode', code);
+    data.append('language', codechefLanguage);
+    data.append('input', input);
+    var result = {
+        Errors: '',
+        Result: '',
+        Stats: ''
+    };
+    return new Promise((resolve, reject) => {
+        GM_xmlhttpRequest({
+            method: 'POST',
+            url: 'https://www.codechef.com/api/ide/run/all',
+            data: data.toString(),
+            headers: {
+                'Accept': 'application/json, text/javascript, */*; q=0.01',
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'X-Csrf-Token': codecheCsrfToken
+            },
+            onload: function(responseDetails) {
+                if (responseDetails.status !== 200 || !responseDetails.response) {
+                    result.Errors = `提交代码到 codechef 服务器时发生了错误，请重试 ${findHelpText}`;
+                    resolve(result);
+                } else {
+                    try {
+                        const response = JSON.parse(responseDetails.response);
+                        resolve(response.timestamp);
+                    } catch (error) {
+                        result.Errors = `解析响应数据 timestamp 时发生了错误，请重试 ${findHelpText}`;
+                        resolve(result);
+                    }
+                }
+            },
+            onerror: function() {
+                result.Errors = '请求 timestamp 时网络错误';
+                resolve(result);
+            }
+        });
+    }).then(timestamp => {
+        if (result.Errors !== '') return result; // 产生了错误，直接返回
+        return new Promise((resolve, reject) => {
+            let retryCount = 0;
+
+            function makeRequest() {
+                GM_xmlhttpRequest({
+                    method: 'GET',
+                    url: `https://www.codechef.com/api/ide/run/all?timestamp=${timestamp}`,
+                    headers: {
+                        'Accept': 'application/json, text/javascript, */*; q=0.01',
+                        'X-Csrf-Token': codecheCsrfToken
+                    },
+                    onload: function(responseDetails) {
+                        if (responseDetails.status !== 200 || !responseDetails.response) {
+                            result.Errors = `请求运行结果时发生了错误，请重试 ${findHelpText}`;
+                            resolve(result);
+                        } else {
+                            try {
+                                const response = JSON.parse(responseDetails.response);
+                                if (response.result === 0 && retryCount < 5) {
+                                    retryCount++;
+                                    setTimeout(makeRequest, 500);
+                                } else if (retryCount >= 5) {
+                                    result.Errors = `结果获取已超时，请重试 ${findHelpText}`;
+                                    resolve(result);
+                                } else {
+                                    const result = {
+                                        Errors: response.stderr == "" ? null : response.stderr,
+                                        Result: response.output,
+                                        Stats: `Status: ${response.status} Time: ${response.time} Mem: ${response.memory} kB`
+                                    };
+                                    resolve(result);
+                                }
+                            } catch (error) {
+                                result.Errors = '请求运行结果时响应数据解析错误';
+                                resolve(result);
+                            }
+                        }
+                    },
+                    onerror: function() {
+                        result.Errors = '请求运行结果时网络错误';
+                        resolve(result);
+                    }
+                });
+            }
+
+            makeRequest();
+        });
+    });
+}
+
+// wandbox编译器参数列表
+var wandboxlist = JSON.parse(GM_getResourceText("wandboxlist"));
+function wandboxCompilerArgsChange(nowSelect) {
+    let LanguageChoiceList = {
+        "6": "PHP", "7": "Python", "9": "C#", "12": "Haskell", "13": "Perl", "19": "OCaml",
+        "20": "Scala", "28": "D", "31": "Python", "32": "Go", "34": "JavaScript", "36": "Java", "40": "Python", "41": "Python",
+        "43": "C++", "50": "C++", "51": "Pascal", "52": "C++", "54": "C++", "60": "Java", "61": "C++", "65": "C#", "67": "Ruby",
+        "70": "Python", "73": "C++", "74": "Java", "75": "Rust", "79": "C#", "80": "C++", "87": "Java"
+    }
+    if (nowSelect in LanguageChoiceList) {
+        $('#RunTestButton').prop("disabled", false);
+        const Languagefiltered = wandboxlist.filter(obj => obj.language === LanguageChoiceList[nowSelect]);
+
+        // 创建编辑器下拉框
+        var CompilerChange = $('<select id="CompilerChange" style="width: 100%;"></select>');
+        $('#CompilerSetting').append(CompilerChange);
+        for (let i = 0; i < Languagefiltered.length; i++) {
+            let Compiler = Languagefiltered[i];
+            let op = $("<option></option>")
+                .val(Compiler.name)
+                .text(Compiler["display-name"] + " " + Compiler.version);
+            $("#CompilerChange").append(op);
+        }
+
+        // 编辑器参数刷新
+        function refreshCompilerArgs() {
+            var flags = '';
+            $("#CompilerBox").find("*").each(function() {
+                if ($(this).is("input[type='checkbox']")) {
+                    let flag = $(this).prop("checked") ? $(this).val() : '';
+                    flags += flag + (flag ? ' ' : '');
+                } else if ($(this).is("select") || $(this).is("input") || $(this).is("textarea")) {
+                    let flag = $(this).val();
+                    flags += flag + (flag ? ' ' : '');
+                }
+            });
+            $("#CompilerArgsInput").val(flags);
+            $("#CompilerArgsInput").prop("readonly", true); // 只读
+        }
+
+        // 编辑器切换监听
+        CompilerChange.change(function() {
+            let selectedName = $(this).val();
+            let Compiler = Languagefiltered.find(
+                (obj) => obj.name === selectedName
+            );
+
+            $("#CompilerArgsInput").val(); // 初始化编译器输入框
+
+            $("#CompilerBox").remove();
+            let div = $("<div id='CompilerBox'></div>");
+
+            let display_compile_command = $(`<input id='${Compiler.name}' value='${Compiler['display-compile-command']}' style="display:none;"}></input>`);
+            div.append(display_compile_command);
+
+            let switches = Compiler.switches;
+            for (let i = 0; i < switches.length; i++) {
+                let switche = switches[i];
+
+                if (switche.type == "single") {
+                    let single = $(`
                     <div>
                         <input type='checkbox' id='${switche.name}' value='${switche['display-flags']}' ${switche.default ? 'checked' : ''}></input>
                         <label for='${switche.name}'>${switche['display-name']}</label>
                     </div>
                     `);
-                        div.append(single);
-                        single.find("input").change(function() {
-                            refreshCompilerArgs();
-                        });
-                    } else if (switche.type == "select") {
-                        let select = $(`<select id='${switche.name}'></select>`);
-                        select.data('previousValue', switche.options[0]['display-flags']);
-                        div.append(select);
-                        for (let i = 0; i < switche.options.length; i++) {
-                            let option = switche.options[i];
-                            let op = $("<option></option>")
-                                .val(option['display-flags'])
-                                .text(option['display-name']);
-                            select.append(op);
-                        }
-                        select.change(function() {
-                            refreshCompilerArgs();
-                        });
+                    div.append(single);
+                    single.find("input").change(function() {
+                        refreshCompilerArgs();
+                    });
+                } else if (switche.type == "select") {
+                    let select = $(`<select id='${switche.name}'></select>`);
+                    select.data('previousValue', switche.options[0]['display-flags']);
+                    div.append(select);
+                    for (let i = 0; i < switche.options.length; i++) {
+                        let option = switche.options[i];
+                        let op = $("<option></option>")
+                            .val(option['display-flags'])
+                            .text(option['display-name']);
+                        select.append(op);
                     }
-                }
-
-                if (Compiler['compiler-option-raw'] == true) {
-                    let textarea = $(`<textarea id="compiler_option_raw" placeholder="Raw compiler options" style="resize: vertical;"></textarea>`);
-                    div.append(textarea);
-                    textarea.on('input', function() {
+                    select.change(function() {
                         refreshCompilerArgs();
                     });
                 }
-                if (Compiler['runtime-option-raw'] == true) {
-                    let textarea = $(`<textarea id="runtime_option_raw" placeholder="Raw runtime options" style="resize: vertical;"></textarea>`);
-                    div.append(textarea);
-                    textarea.on('input', function() {
-                        refreshCompilerArgs();
-                    });
-                }
-                $("#CompilerSetting").append(div);
+            }
 
-                refreshCompilerArgs();  // 初始化
-            });
+            if (Compiler['compiler-option-raw'] == true) {
+                let textarea = $(`<textarea id="compiler_option_raw" placeholder="Raw compiler options" style="resize: vertical;"></textarea>`);
+                div.append(textarea);
+                textarea.on('input', function() {
+                    refreshCompilerArgs();
+                });
+            }
+            if (Compiler['runtime-option-raw'] == true) {
+                let textarea = $(`<textarea id="runtime_option_raw" placeholder="Raw runtime options" style="resize: vertical;"></textarea>`);
+                div.append(textarea);
+                textarea.on('input', function() {
+                    refreshCompilerArgs();
+                });
+            }
+            $("#CompilerSetting").append(div);
 
-            CompilerChange.trigger("change"); // 初始化
-        } else {
-            $('#RunTestButton').prop("disabled", true);
-        }
-    }
-
-    // wandbox编译器通信
-    async function wandboxCompiler(code, input) {
-        var data = {
-            code: code,
-            codes: [],
-            compiler: $('#CompilerChange').val().replace($('#compiler_option_raw').val(), '').replace($('#runtime_option_raw').val(), ''),
-            'compiler-option-raw': $('#compiler_option_raw').val(),
-            'runtime-option-raw': $('#runtime_option_raw').val(),
-            options: $("#CompilerArgsInput").val(),
-            description: '',
-            stdin: input,
-            title: ''
-        }
-        var result = {
-            Errors: '',
-            Result: '',
-            Stats: ''
-        };
-
-        return new Promise((resolve, reject) => {
-            GM_xmlhttpRequest({
-                method: 'POST',
-                url: 'https://wandbox.org/api/compile.json',
-                data: JSON.stringify(data),
-                onload: function(responseDetails) {
-                    if (responseDetails.status !== 200 || !responseDetails.response) {
-                        result.Errors = `发生了未知的错误，请重试 ${findHelpText}`;
-                        resolve(result);
-                    } else {
-                        try {
-                            const response = JSON.parse(responseDetails.response);
-                            result.Errors = response.compiler_error == "" ? response.signal : response.compiler_error;
-                            result.Result = response.program_output;
-                            result.Stats = response.status == "0" ? "Finish" : "Error";
-                            resolve(result);
-                        } catch (error) {
-                            result.Errors = '响应数据解析错误';
-                            resolve(result);
-                        }
-                    }
-                },
-                onerror: function() {
-                    result.Errors = '网络错误';
-                    resolve(result);
-                }
-            });
+            refreshCompilerArgs();  // 初始化
         });
+
+        CompilerChange.trigger("change"); // 初始化
+    } else {
+        $('#RunTestButton').prop("disabled", true);
     }
+}
 
-    // 编译器参数
-    function changeCompilerArgs(nowSelect) {
-        if (onlineCompilerChoice == "official") {
-            officialCompilerArgsChange(nowSelect);
-        } else if (onlineCompilerChoice == "rextester") {
-            rextesterCompilerArgsChange(nowSelect);
-        } else if (onlineCompilerChoice == "codechef") {
-            codechefCompilerArgsChange(nowSelect);
-        } else if (onlineCompilerChoice == "wandbox") {
-            wandboxCompilerArgsChange(nowSelect);
-        }
+// wandbox编译器通信
+async function wandboxCompiler(code, input) {
+    var data = {
+        code: code,
+        codes: [],
+        compiler: $('#CompilerChange').val().replace($('#compiler_option_raw').val(), '').replace($('#runtime_option_raw').val(), ''),
+        'compiler-option-raw': $('#compiler_option_raw').val(),
+        'runtime-option-raw': $('#runtime_option_raw').val(),
+        options: $("#CompilerArgsInput").val(),
+        description: '',
+        stdin: input,
+        title: ''
     }
+    var result = {
+        Errors: '',
+        Result: '',
+        Stats: ''
+    };
 
-    // 在线编译器通信
-    async function onlineCompilerConnect(code, input) {
-        if (onlineCompilerChoice == "official") {
-            return await officialCompiler(code, input);
-        } else if (onlineCompilerChoice == "rextester") {
-            return await rextesterCompiler(code, input);
-        } else if (onlineCompilerChoice == "codechef") {
-            return await codechefCompiler(code, input);
-        } else if (onlineCompilerChoice == "wandbox") {
-            return await wandboxCompiler(code, input);
-        }
-    }
-
-    // 差异对比
-    function codeDiff(expectedText, actualText) {
-        // 将文本按行拆分
-        var expectedLines = expectedText.split('\n');
-        var actualLines = actualText.split('\n');
-
-        var output = $('<div>');
-        for (var i = 0; i < expectedLines.length; i++) {
-            var expectedLine = expectedLines[i];
-            var actualLine = actualLines[i];
-            var LineDiv = $(`<div class="DiffLine"><span class="LineNo">${i + 1}</span></div>`);
-            if (actualLine == undefined) {
-                LineDiv.append(`<span class="added">${expectedLine}</span>`);
-            } else {
-                let div = $('<div class="LineContent">');
-                if (expectedLine === actualLine) {
-                    div.append(`<span style="padding-left:3px;">${actualLine}</span>`);
+    return new Promise((resolve, reject) => {
+        GM_xmlhttpRequest({
+            method: 'POST',
+            url: 'https://wandbox.org/api/compile.json',
+            data: JSON.stringify(data),
+            onload: function(responseDetails) {
+                if (responseDetails.status !== 200 || !responseDetails.response) {
+                    result.Errors = `发生了未知的错误，请重试 ${findHelpText}`;
+                    resolve(result);
                 } else {
-                    div.append(`<span class="removed" style="padding-left:3px;">${actualLine}</span>`);
-                    div.append(`<span class="added" style="padding-left:3px;">${expectedLine}</span>`);
+                    try {
+                        const response = JSON.parse(responseDetails.response);
+                        result.Errors = response.compiler_error == "" ? response.signal : response.compiler_error;
+                        result.Result = response.program_output;
+                        result.Stats = response.status == "0" ? "Finish" : "Error";
+                        resolve(result);
+                    } catch (error) {
+                        result.Errors = '响应数据解析错误';
+                        resolve(result);
+                    }
                 }
-                LineDiv.append(div);
+            },
+            onerror: function() {
+                result.Errors = '网络错误';
+                resolve(result);
             }
-            output.append(LineDiv);
-        }
+        });
+    });
+}
 
-        // 处理多余的 actualLines
-        for (var j = expectedLines.length; j < actualLines.length; j++) {
-            output.append(`<span class="removed" style="padding-left:3px;">${actualLines[j]}</span>`);
-        }
+// 编译器参数
+function changeCompilerArgs(nowSelect) {
+    if (onlineCompilerChoice == "official") {
+        officialCompilerArgsChange(nowSelect);
+    } else if (onlineCompilerChoice == "rextester") {
+        rextesterCompilerArgsChange(nowSelect);
+    } else if (onlineCompilerChoice == "codechef") {
+        codechefCompilerArgsChange(nowSelect);
+    } else if (onlineCompilerChoice == "wandbox") {
+        wandboxCompilerArgsChange(nowSelect);
+    }
+}
 
-        return output.html();
+// 在线编译器通信
+async function onlineCompilerConnect(code, input) {
+    if (onlineCompilerChoice == "official") {
+        return await officialCompiler(code, input);
+    } else if (onlineCompilerChoice == "rextester") {
+        return await rextesterCompiler(code, input);
+    } else if (onlineCompilerChoice == "codechef") {
+        return await codechefCompiler(code, input);
+    } else if (onlineCompilerChoice == "wandbox") {
+        return await wandboxCompiler(code, input);
+    }
+}
+
+// 差异对比
+function codeDiff(expectedText, actualText) {
+    // 将文本按行拆分
+    var expectedLines = expectedText.split('\n');
+    var actualLines = actualText.split('\n');
+
+    var output = $('<div>');
+    for (var i = 0; i < expectedLines.length; i++) {
+        var expectedLine = expectedLines[i];
+        var actualLine = actualLines[i];
+        var LineDiv = $(`<div class="DiffLine"><span class="LineNo">${i + 1}</span></div>`);
+        if (actualLine == undefined) {
+            LineDiv.append(`<span class="added">${expectedLine}</span>`);
+        } else {
+            let div = $('<div class="LineContent">');
+            if (expectedLine === actualLine) {
+                div.append(`<span style="padding-left:3px;">${actualLine}</span>`);
+            } else {
+                div.append(`<span class="removed" style="padding-left:3px;">${actualLine}</span>`);
+                div.append(`<span class="added" style="padding-left:3px;">${expectedLine}</span>`);
+            }
+            LineDiv.append(div);
+        }
+        output.append(LineDiv);
     }
 
-    // 样例测试函数
-    async function runCode(event, sourceDiv, submitDiv) {
-        event.preventDefault();
-        const loadingImage = $('<img class="CFBetter_loding" src="//codeforces.org/s/84141/images/ajax-loading-24x24.gif">');
-        $('#RunTestButton').after(loadingImage);
-        $('#statePanel').remove(); // 移除旧结果
+    // 处理多余的 actualLines
+    for (var j = expectedLines.length; j < actualLines.length; j++) {
+        output.append(`<span class="removed" style="padding-left:3px;">${actualLines[j]}</span>`);
+    }
 
-        // 评测结果面板
-        var statePanel = $(`<div id="statePanel">`);
-        submitDiv.after(statePanel);
+    return output.html();
+}
 
-        // 更新状态
-        rextesterCompilerArgs = $('#CompilerArgsInput').val();
+// 样例测试函数
+async function runCode(event, sourceDiv, submitDiv) {
+    event.preventDefault();
+    const loadingImage = $('<img class="CFBetter_loding" src="//codeforces.org/s/84141/images/ajax-loading-24x24.gif">');
+    $('#RunTestButton').after(loadingImage);
+    $('#statePanel').remove(); // 移除旧结果
 
-        // 获取数据
-        const testData = collectTestData();
-        const customtestData = await getCustomTestData();
+    // 评测结果面板
+    var statePanel = $(`<div id="statePanel">`);
+    submitDiv.after(statePanel);
 
-        // 测试
-        const handleResult = (prefix, data, item, result) => {
-            if (result.Errors) {
-                statePanel.append($(`<div class="RunState_title error">${prefix}${item} Compilation error or Time limit</div>`));
-                // 渲染终端转义序列
-                GM_addStyle(GM_getResourceText("xtermcss"));
-                let terminalContainer = $(`<div id="terminal-container" style="overflow: auto;margin-bottom: 5px;"></div>`);
-                statePanel.append(terminalContainer);
-                const term = new Terminal({
-                    rows: 10,
-                    cols: 150
-                });
-                term.setOption('theme', {
-                    background: '#2d2e2c',
-                });
-                term.setOption('convertEol', true); // 将\n转换为\r\n
-                term.write(result.Errors);
-                term.open(terminalContainer.get(0));
-            } else if (result.Result.trim() === data.output.trim()) {
-                statePanel.append($(`<div class="RunState_title ok">${prefix}${item} Accepted</div>`));
-            } else {
-                statePanel.append($(`<div class="RunState_title error">${prefix}${item} Wrong Answer</div>`));
-                if ($('#DontShowDiff').prop('checked')) statePanel.append($(`<div class="outputDiff" style="white-space: break-spaces;">${result.Result.trim()}</div>`));
-                else statePanel.append($(`<p>差异对比：</p><div class="outputDiff">${codeDiff(data.output.trim(), result.Result.trim())}</div>`));
-            }
-            statePanel.append($(`<div style="color:${result.Errors ? 'red' : ''};">状态： ${result.Stats}</div>`));
-        };
+    // 更新状态
+    rextesterCompilerArgs = $('#CompilerArgsInput').val();
 
-        // 遍历数据并测试
-        for (const [item, data] of Object.entries(customtestData)) {
+    // 获取数据
+    const testData = collectTestData();
+    const customtestData = await getCustomTestData();
+
+    // 测试
+    const handleResult = (prefix, data, item, result) => {
+        if (result.Errors) {
+            statePanel.append($(`<div class="RunState_title error">${prefix}${item} Compilation error or Time limit</div>`));
+            // 渲染终端转义序列
+            GM_addStyle(GM_getResourceText("xtermcss"));
+            let terminalContainer = $(`<div id="terminal-container" style="overflow: auto;margin-bottom: 5px;"></div>`);
+            statePanel.append(terminalContainer);
+            const term = new Terminal({
+                rows: 10,
+                cols: 150
+            });
+            term.setOption('theme', {
+                background: '#2d2e2c',
+            });
+            term.setOption('convertEol', true); // 将\n转换为\r\n
+            term.write(result.Errors);
+            term.open(terminalContainer.get(0));
+        } else if (result.Result.trim() === data.output.trim()) {
+            statePanel.append($(`<div class="RunState_title ok">${prefix}${item} Accepted</div>`));
+        } else {
+            statePanel.append($(`<div class="RunState_title error">${prefix}${item} Wrong Answer</div>`));
+            if ($('#DontShowDiff').prop('checked')) statePanel.append($(`<div class="outputDiff" style="white-space: break-spaces;">${result.Result.trim()}</div>`));
+            else statePanel.append($(`<p>差异对比：</p><div class="outputDiff">${codeDiff(data.output.trim(), result.Result.trim())}</div>`));
+        }
+        statePanel.append($(`<div style="color:${result.Errors ? 'red' : ''};">状态： ${result.Stats}</div>`));
+    };
+
+    // 遍历数据并测试
+    for (const [item, data] of Object.entries(customtestData)) {
+        await new Promise(resolve => setTimeout(resolve, 500)); // 延迟500毫秒
+        const result = await onlineCompilerConnect(sourceDiv.val(), data.input);
+        handleResult('自定义样例', data, item, result);
+    }
+
+    if (!$('#onlyCustomTest').prop('checked')) {
+        for (const [item, data] of Object.entries(testData)) {
             await new Promise(resolve => setTimeout(resolve, 500)); // 延迟500毫秒
             const result = await onlineCompilerConnect(sourceDiv.val(), data.input);
-            handleResult('自定义样例', data, item, result);
+            handleResult('题目样例', data, item, result);
         }
-
-        if (!$('#onlyCustomTest').prop('checked')) {
-            for (const [item, data] of Object.entries(testData)) {
-                await new Promise(resolve => setTimeout(resolve, 500)); // 延迟500毫秒
-                const result = await onlineCompilerConnect(sourceDiv.val(), data.input);
-                handleResult('题目样例', data, item, result);
-            }
-        }
-
-        loadingImage.remove();
     }
 
-    async function addProblemPageCodeEditor() {
-        if (typeof ace === 'undefined') {
-            console.log("%c未找到ace，当前可能为非题目页或者比赛刚刚结束", "border:1px solid #000;padding:10px;");
-            return; // 未登录，不存在ace库
+    loadingImage.remove();
+}
+
+async function addProblemPageCodeEditor() {
+    if (typeof ace === 'undefined') {
+        console.log("%c未找到ace，当前可能为非题目页或者比赛刚刚结束", "border:1px solid #000;padding:10px;");
+        return; // 未登录，不存在ace库
+    }
+
+    const href = window.location.href;
+    let submitUrl = /\/problemset\//.test(href) ? hostAddress + '/problemset/submit' :
+        href.replace(/\/problem[A-Za-z0-9\/#]*/, "/submit");
+    let cloneHTML = await getSubmitHTML(submitUrl);
+
+    // 创建
+    let from = await CreateCodeDevFrom(submitUrl, cloneHTML);
+    let editor = from.editor;
+    let selectLang = from.selectLang;
+    let submitButton = from.submitButton;
+    let runButton = from.runButton;
+
+    CustomTestInit(); // 初始化自定义测试数据面板
+    selectLang.on('change', () => changeAceLanguage(from.selectLang, from.editor)); // 编辑器语言切换监听
+    editor.getSession().on("changeMode", updateAutocomplete); // 切换语言监听，更新自动补全
+
+    // 样例测试
+    runButton.on('click', (event) => runCode(event, from.sourceDiv, from.submitDiv));
+
+    // 提交
+    submitButton.on('click', function(event) {
+        event.preventDefault();
+        if (!$('#secureSubmit').prop('checked')) {
+            submitButton.after(`<img class="CFBetter_loding" src="//codeforces.org/s/84141/images/ajax-loading-24x24.gif">`);
+            $('#CFBetter_SubmitForm').submit();
+        } else {
+            submitButton.addClass('disabled');
+            setTimeout(function() {
+                submitButton.removeClass('disabled');
+            }, 300);
         }
+    });
 
-        const href = window.location.href;
-        let submitUrl = /\/problemset\//.test(href) ? hostAddress + '/problemset/submit' :
-            href.replace(/\/problem[A-Za-z0-9\/#]*/, "/submit");
-        let cloneHTML = await getSubmitHTML(submitUrl);
+    // 初始化
+    selectLang.val(compilerSelection);
+    changeAceLanguage(from.selectLang, from.editor);
+    updateAutocomplete();
+}
 
-        // 创建
-        let from = await CreateCodeDevFrom(submitUrl, cloneHTML);
-        let editor = from.editor;
-        let selectLang = from.selectLang;
-        let submitButton = from.submitButton;
-        let runButton = from.runButton;
+// 等待LaTeX渲染队列全部完成
+function waitUntilIdleThenDo(callback) {
+    var intervalId = setInterval(function() {
+        var queue = MathJax.Hub.queue;
+        if (queue.pending === 0 && queue.running === 0) {
+            clearInterval(intervalId);
+            callback();
+        }
+    }, 100);
+}
 
-        CustomTestInit(); // 初始化自定义测试数据面板
-        selectLang.on('change', () => changeAceLanguage(from.selectLang, from.editor)); // 编辑器语言切换监听
-        editor.getSession().on("changeMode", updateAutocomplete); // 切换语言监听，更新自动补全
-
-        // 样例测试
-        runButton.on('click', (event) => runCode(event, from.sourceDiv, from.submitDiv));
-
-        // 提交
-        submitButton.on('click', function(event) {
-            event.preventDefault();
-            if (!$('#secureSubmit').prop('checked')) {
-                submitButton.after(`<img class="CFBetter_loding" src="//codeforces.org/s/84141/images/ajax-loading-24x24.gif">`);
-                $('#CFBetter_SubmitForm').submit();
-            } else {
-                submitButton.addClass('disabled');
-                setTimeout(function() {
-                    submitButton.removeClass('disabled');
-                }, 300);
-            }
-        });
-
-        // 初始化
-        selectLang.val(compilerSelection);
-        changeAceLanguage(from.selectLang, from.editor);
-        updateAutocomplete();
-    }
-
-    // 等待LaTeX渲染队列全部完成
-    function waitUntilIdleThenDo(callback) {
-        var intervalId = setInterval(function() {
-            var queue = MathJax.Hub.queue;
-            if (queue.pending === 0 && queue.running === 0) {
-                clearInterval(intervalId);
-                callback();
-            }
-        }, 100);
-    }
-
-    // 字数超限确认
-    function showWordsExceededDialog(button, textLength, realTextLength) {
-        return new Promise(resolve => {
-            const styleElement = GM_addStyle(darkenPageStyle);
-            $(button).removeClass("translated");
-            $(button).text("字数超限");
-            $(button).css("cursor", "not-allowed");
-            $(button).prop("disabled", true);
-            let htmlString = `
+// 字数超限确认
+function showWordsExceededDialog(button, textLength, realTextLength) {
+    return new Promise(resolve => {
+        const styleElement = GM_addStyle(darkenPageStyle);
+        $(button).removeClass("translated");
+        $(button).text("字数超限");
+        $(button).css("cursor", "not-allowed");
+        $(button).prop("disabled", true);
+        let htmlString = `
       <div class="CFBetter_modal">
           <h2>字符数超限! </h2>
           <p>即将翻译的内容共 <strong>${realTextLength}</strong> 字符</p>
@@ -6184,25 +6182,25 @@ async function CloneOriginalHTML(submitUrl, cacheKey) {
           </div>
       </div>
       `;
-            $('body').before(htmlString);
-            $("#continueButton").click(function() {
-                $(styleElement).remove();
-                $('.CFBetter_modal').remove();
-                resolve(true);
-            });
-            $("#cancelButton").click(function() {
-                $(styleElement).remove();
-                $('.CFBetter_modal').remove();
-                resolve(false);
-            });
+        $('body').before(htmlString);
+        $("#continueButton").click(function() {
+            $(styleElement).remove();
+            $('.CFBetter_modal').remove();
+            resolve(true);
         });
-    }
+        $("#cancelButton").click(function() {
+            $(styleElement).remove();
+            $('.CFBetter_modal').remove();
+            resolve(false);
+        });
+    });
+}
 
-    //跳过折叠块确认
-    function skiFoldingBlocks() {
-        return new Promise(resolve => {
-            const styleElement = GM_addStyle(darkenPageStyle);
-            let htmlString = `
+//跳过折叠块确认
+function skiFoldingBlocks() {
+    return new Promise(resolve => {
+        const styleElement = GM_addStyle(darkenPageStyle);
+        let htmlString = `
       <div class="CFBetter_modal">
           <h2>是否跳过折叠块？</h2>
           <p></p>
@@ -6220,749 +6218,749 @@ async function CloneOriginalHTML(submitUrl, cacheKey) {
           </div>
       </div>
       `;
-            $('body').before(htmlString);
-            $("#skipButton").click(function() {
-                $(styleElement).remove();
-                $('.CFBetter_modal').remove();
-                resolve(true);
-            });
-            $("#cancelButton").click(function() {
-                $(styleElement).remove();
-                $('.CFBetter_modal').remove();
-                resolve(false);
-            });
+        $('body').before(htmlString);
+        $("#skipButton").click(function() {
+            $(styleElement).remove();
+            $('.CFBetter_modal').remove();
+            resolve(true);
         });
-    }
+        $("#cancelButton").click(function() {
+            $(styleElement).remove();
+            $('.CFBetter_modal').remove();
+            resolve(false);
+        });
+    });
+}
 
-    // latex替换
-    function replaceBlock(text, matches, replacements) {
-        try {
-            for (let i = 0; i < matches.length; i++) {
-                let match = matches[i];
-                let replacement = '';
-                if (replaceSymbol === "1") {
-                    replacement = `【${i + 1}】`;
-                } else if (replaceSymbol === "2") {
-                    replacement = `{${i + 1}}`;
-                } else if (replaceSymbol === "3") {
-                    replacement = `[${i + 1}]`;
-                }
-                text = text.replace(match, replacement);
-                replacements[replacement] = match;
-            }
-        } catch (e) { }
-        return text;
-    }
-
-    // latex还原
-    function recoverBlock(translatedText, matches, replacements) {
+// latex替换
+function replaceBlock(text, matches, replacements) {
+    try {
         for (let i = 0; i < matches.length; i++) {
             let match = matches[i];
-            let replacement = replacements[`【${i + 1}】`] || replacements[`[${i + 1}]`] || replacements[`{${i + 1}}`];
-
-            let latexMatch = '(?<latex_block>\\$\\$(\\\\.|[^\\$])*?\\$\\$)|(?<latex_inline>\\$(\\\\.|[^\\$])*?\\$)|';
-
-            let regex = new RegExp(latexMatch + `【\\s*${i + 1}\\s*】|\\[\\s*${i + 1}\\s*\\]|{\\s*${i + 1}\\s*}`, 'g');
-            translatedText = translatedText.replace(regex, function(match, ...args) {
-                // LaTeX中的不替换
-                const groups = args[args.length - 1]; // groups是replace方法的最后一个参数
-                if (groups.latex_block || groups.latex_inline) return match;
-                // 没有空格则加一个
-                const offset = args[args.length - 3]; // offset是replace方法的倒数第三个参数
-                let leftSpace = "", rightSpace = "";
-                if (!/\s/.test(translatedText[offset - 1])) leftSpace = " ";
-                if (!/\s/.test(translatedText[offset + match.length])) rightSpace = " ";
-                return leftSpace + replacement + rightSpace;
-            });
-
-            regex = new RegExp(latexMatch + `【\\s*${i + 1}(?![】\\d])|(?<![【\\d])${i + 1}\\s*】|\\[\\s*${i + 1}(?![\\]\\d])|(?<![\\[\\d])${i + 1}\\s*\\]|{\\s*${i + 1}(?![}\\d])|(?<![{\\d])${i + 1}\\s*}`, 'g');
-            translatedText = translatedText.replace(regex, function(match, ...args) {
-                // LaTeX中的不替换
-                const groups = args[args.length - 1];
-                if (groups.latex_block || groups.latex_inline) return match;
-                // 没有空格则加一个
-                const offset = args[args.length - 3];
-                let leftSpace = "", rightSpace = "";
-                if (!/\s/.test(translatedText[offset - 1])) leftSpace = " ";
-                if (!/\s/.test(translatedText[offset + match.length])) rightSpace = " ";
-                return leftSpace + replacement + rightSpace;
-            });
+            let replacement = '';
+            if (replaceSymbol === "1") {
+                replacement = `【${i + 1}】`;
+            } else if (replaceSymbol === "2") {
+                replacement = `{${i + 1}}`;
+            } else if (replaceSymbol === "3") {
+                replacement = `[${i + 1}]`;
+            }
+            text = text.replace(match, replacement);
+            replacements[replacement] = match;
         }
-        return translatedText;
+    } catch (e) { }
+    return text;
+}
+
+// latex还原
+function recoverBlock(translatedText, matches, replacements) {
+    for (let i = 0; i < matches.length; i++) {
+        let match = matches[i];
+        let replacement = replacements[`【${i + 1}】`] || replacements[`[${i + 1}]`] || replacements[`{${i + 1}}`];
+
+        let latexMatch = '(?<latex_block>\\$\\$(\\\\.|[^\\$])*?\\$\\$)|(?<latex_inline>\\$(\\\\.|[^\\$])*?\\$)|';
+
+        let regex = new RegExp(latexMatch + `【\\s*${i + 1}\\s*】|\\[\\s*${i + 1}\\s*\\]|{\\s*${i + 1}\\s*}`, 'g');
+        translatedText = translatedText.replace(regex, function(match, ...args) {
+            // LaTeX中的不替换
+            const groups = args[args.length - 1]; // groups是replace方法的最后一个参数
+            if (groups.latex_block || groups.latex_inline) return match;
+            // 没有空格则加一个
+            const offset = args[args.length - 3]; // offset是replace方法的倒数第三个参数
+            let leftSpace = "", rightSpace = "";
+            if (!/\s/.test(translatedText[offset - 1])) leftSpace = " ";
+            if (!/\s/.test(translatedText[offset + match.length])) rightSpace = " ";
+            return leftSpace + replacement + rightSpace;
+        });
+
+        regex = new RegExp(latexMatch + `【\\s*${i + 1}(?![】\\d])|(?<![【\\d])${i + 1}\\s*】|\\[\\s*${i + 1}(?![\\]\\d])|(?<![\\[\\d])${i + 1}\\s*\\]|{\\s*${i + 1}(?![}\\d])|(?<![{\\d])${i + 1}\\s*}`, 'g');
+        translatedText = translatedText.replace(regex, function(match, ...args) {
+            // LaTeX中的不替换
+            const groups = args[args.length - 1];
+            if (groups.latex_block || groups.latex_inline) return match;
+            // 没有空格则加一个
+            const offset = args[args.length - 3];
+            let leftSpace = "", rightSpace = "";
+            if (!/\s/.test(translatedText[offset - 1])) leftSpace = " ";
+            if (!/\s/.test(translatedText[offset + match.length])) rightSpace = " ";
+            return leftSpace + replacement + rightSpace;
+        });
     }
+    return translatedText;
+}
 
-    // 翻译框/翻译处理器
-    var translatedText = "";
-    async function translateProblemStatement(text, element_node, button, is_comment) {
-        let status = 0;
-        let id = getRandomNumber(8);
-        let matches = [];
-        let replacements = {};
-        let translationService = {
-            "deepl": "DeepL",
-            "iflyrec": "讯飞听见",
-            "youdao": "有道",
-            "google": "Google",
-            "caiyun": "彩云小译",
-            "openai": "ChatGPT"
-        };
-        // 创建元素并放在element_node的后面
-        const translateDiv = $('<div>').attr('id', id).addClass('translate-problem-statement');
-        const spanElement = $('<span>');
-        translateDiv.append(spanElement);
-        $(element_node).after(translateDiv);
+// 翻译框/翻译处理器
+var translatedText = "";
+async function translateProblemStatement(text, element_node, button, is_comment) {
+    let status = 0;
+    let id = getRandomNumber(8);
+    let matches = [];
+    let replacements = {};
+    let translationService = {
+        "deepl": "DeepL",
+        "iflyrec": "讯飞听见",
+        "youdao": "有道",
+        "google": "Google",
+        "caiyun": "彩云小译",
+        "openai": "ChatGPT"
+    };
+    // 创建元素并放在element_node的后面
+    const translateDiv = $('<div>').attr('id', id).addClass('translate-problem-statement');
+    const spanElement = $('<span>');
+    translateDiv.append(spanElement);
+    $(element_node).after(translateDiv);
 
-        // panel
-        var panelDiv = $('<div>').addClass('translate-problem-statement-panel');
-        // 信息
-        var topText;
-        if (is_comment && commentTranslationChoice != "0") topText = $('<div>').text(translationService[commentTranslationChoice] + ' 翻译').addClass('topText');
-        else topText = $('<div>').text(translationService[translation] + ' 翻译').addClass('topText');
-        panelDiv.append(topText);
-        // 右侧
-        var rightDiv = $('<div>').css('display', 'flex');
-        panelDiv.append(rightDiv);
-        var copyButton = $('<div>').html(copyIcon).addClass('borderlessButton');
-        rightDiv.append(copyButton);
-        var upButton = $('<div>').html(putawayIcon).addClass('borderlessButton');
-        rightDiv.append(upButton);
-        var closeButton = $('<div>').html(closeIcon).addClass('borderlessButton');
-        rightDiv.append(closeButton);
+    // panel
+    var panelDiv = $('<div>').addClass('translate-problem-statement-panel');
+    // 信息
+    var topText;
+    if (is_comment && commentTranslationChoice != "0") topText = $('<div>').text(translationService[commentTranslationChoice] + ' 翻译').addClass('topText');
+    else topText = $('<div>').text(translationService[translation] + ' 翻译').addClass('topText');
+    panelDiv.append(topText);
+    // 右侧
+    var rightDiv = $('<div>').css('display', 'flex');
+    panelDiv.append(rightDiv);
+    var copyButton = $('<div>').html(copyIcon).addClass('borderlessButton');
+    rightDiv.append(copyButton);
+    var upButton = $('<div>').html(putawayIcon).addClass('borderlessButton');
+    rightDiv.append(upButton);
+    var closeButton = $('<div>').html(closeIcon).addClass('borderlessButton');
+    rightDiv.append(closeButton);
 
-        panelDiv.insertBefore(translateDiv);
+    panelDiv.insertBefore(translateDiv);
 
-        // 收起按钮
-        upButton.on("click", function() {
-            if (upButton.html() === putawayIcon) {
-                upButton.html(unfoldIcon);
-                $(translateDiv).css({
-                    display: "none",
-                    transition: "height 2s"
-                });
-            } else {
-                // 执行收起操作
-                upButton.html(putawayIcon);
-                $(translateDiv).css({
-                    display: "",
-                    transition: "height 2s"
-                });
-            }
-        });
-
-        // 关闭按钮
-        closeButton.on("click", function() {
-            $(translateDiv).remove();
-            $(panelDiv).remove();
-        });
-
-        // 替换latex公式
-        if (is_oldLatex) {
-            let regex = /<span\s+class="tex-span">.*?<\/span>/gi;
-            matches = matches.concat(text.match(regex));
-            text = replaceBlock(text, matches, replacements);
-            text = text.replace(/<p>(.*?)<\/p>/g, "$1\n\n"); // <p/>标签换为换行
-        } else if (is_acmsguru) {
-            let regex = /<i>.*?<\/i>|<sub>.*?<\/sub>|<sup>.*?<\/sup>|<pre>.*?<\/pre>/gi;
-            matches = matches.concat(text.match(regex));
-            text = replaceBlock(text, matches, replacements);
-        } else if (translation != "openai") {
-            // 使用GPT翻译时不必替换latex公式
-            let regex = /\$\$(\\.|[^\$])*?\$\$|\$(\\.|[^\$])*?\$/g;
-            matches = matches.concat(text.match(regex));
-            text = replaceBlock(text, matches, replacements);
-        }
-        // 字符数上限
-        const translationLimits = {
-            deepl: 5000,
-            iflyrec: 2000,
-            youdao: 600,
-            google: 5000,
-            caiyun: 5000
-        };
-        if (translationLimits.hasOwnProperty(translation) && text.length > translationLimits[translation]) {
-            const shouldContinue = await showWordsExceededDialog(button, translationLimits[translation], text.length);
-            if (!shouldContinue) {
-                status = 1;
-                return {
-                    translateDiv: translateDiv,
-                    status: status
-                };
-            }
-        }
-        // 翻译
-        async function translate(translation) {
-            try {
-                if (translation == "deepl") {
-                    translateDiv.html(`正在使用 ${translationService[translation]} 翻译中……请稍等`);
-                    translatedText = await translate_deepl(text);
-                } else if (translation == "iflyrec") {
-                    translateDiv.html(`正在使用 ${translationService[translation]} 翻译中……请稍等`);
-                    translatedText = await translate_iflyrec(text);
-                } else if (translation == "youdao") {
-                    translateDiv.html(`正在使用 ${translationService[translation]} 翻译中……请稍等`);
-                    translatedText = await translate_youdao_mobile(text);
-                } else if (translation == "google") {
-                    translateDiv.html(`正在使用 ${translationService[translation]} 翻译中……请稍等`);
-                    translatedText = await translate_gg(text);
-                } else if (translation == "caiyun") {
-                    translateDiv.html(`正在使用 ${translationService[translation]} 翻译中……请稍等`);
-                    await translate_caiyun_startup();
-                    translatedText = await translate_caiyun(text);
-                } else if (translation == "openai") {
-                    translateDiv.html("正在使用 ChatGPT 翻译中……" +
-                        "<br><br>应用的配置：" + opneaiConfig.configurations[opneaiConfig.choice].note +
-                        "<br><br>使用 ChatGPT 翻译需要很长的时间，请耐心等待");
-                    translatedText = await translate_openai(text);
-                }
-                if (/^翻译出错/.test(translatedText)) status = 2;
-            } catch (error) {
-                status = 2;
-                translatedText = error;
-            }
-        }
-        if (is_comment && commentTranslationChoice != "0") await translate(commentTranslationChoice);
-        else await translate(translation);
-
-        // 还原latex公式
-        translatedText = translatedText.replace(/】\s*【/g, '】 【');
-        translatedText = translatedText.replace(/\]\s*\[/g, '] [');
-        translatedText = translatedText.replace(/\}\s*\{/g, '} {');
-        if (is_oldLatex) {
-            translatedText = translatedText.replace(/(.+?)(\n\n|$)/g, "<p>$1</p>"); // 还原为<p/>标签
-            translatedText = recoverBlock(translatedText, matches, replacements);
-        } else if (is_acmsguru) {
-            translatedText = recoverBlock(translatedText, matches, replacements);
-        } else if (translation != "openai") {
-            translatedText = recoverBlock(translatedText, matches, replacements);
-        }
-
-        // 结果复制按钮
-        if (!is_oldLatex && !is_acmsguru) {
-            // 创建一个隐藏的元素来保存 translatedText 的值
-            var textElement = document.createElement("div");
-            textElement.style.display = "none";
-            textElement.textContent = translatedText;
-            translateDiv.parent().insertBefore(textElement, translateDiv);
-
-            // 复制按钮
-            copyButton.on("click", function() {
-                var translatedText = textElement.textContent;
-                GM_setClipboard(translatedText);
-                copyButton.html(copyedIcon);
-                copyButton.css({ 'fill': '#8bc34a' });
-                // 复制提示
-                setTimeout(() => {
-                    copyButton.html(copyIcon);
-                    copyButton.css({ 'fill': '' });
-                }, 2000);
+    // 收起按钮
+    upButton.on("click", function() {
+        if (upButton.html() === putawayIcon) {
+            upButton.html(unfoldIcon);
+            $(translateDiv).css({
+                display: "none",
+                transition: "height 2s"
             });
-        }
-
-        // 转义LaTex中的特殊符号
-        if (!is_oldLatex && !is_acmsguru) {
-            const escapeRules = [
-                { pattern: /(?<!\\)>(?!\s)/g, replacement: " &gt; " }, // >符号
-                { pattern: /(?<!\\)</g, replacement: " &lt; " }, // <符号
-                { pattern: /(?<!\\)\*/g, replacement: " &#42; " }, // *符号
-                { pattern: /(?<!\\)_/g, replacement: " &#95; " }, // _符号
-                { pattern: /(?<!\\)\\\\(?=\s)/g, replacement: "\\\\\\\\" }, // \\符号
-                { pattern: /(?<!\\)\\(?![\\a-zA-Z0-9])/g, replacement: "\\\\" }, // \符号
-            ];
-
-            let latexMatches = [...translatedText.matchAll(/\$\$([\s\S]*?)\$\$|\$(.*?)\$|\$([\s\S]*?)\$/g)];
-
-            for (const match of latexMatches) {
-                const matchedText = match[0];
-                var escapedText = matchedText;
-
-                for (const rule of escapeRules) {
-                    escapedText = escapedText.replaceAll(rule.pattern, rule.replacement);
-                }
-                escapedText = escapedText.replace(/\$\$/g, "$$$$$$$$");// $$符号（因为后面需要作为replacement）
-                translatedText = translatedText.replace(matchedText, escapedText);
-            }
-        }
-
-        // 使符合mathjx的转换语法
-        const mathjaxRuleMap = [
-            { pattern: /\$/g, replacement: "$$$$$$" }, // $$ 行间
-        ];
-        mathjaxRuleMap.forEach(({ pattern, replacement }) => {
-            translatedText = translatedText.replace(pattern, replacement);
-        });
-
-        // markdown修正
-        const mdRuleMap = [
-            { pattern: /(\s_[\u4e00-\u9fa5]+_)([\u4e00-\u9fa5]+)/g, replacement: "$1 $2" }, // 斜体
-            { pattern: /(_[\u4e00-\u9fa5]+_\s)([\u4e00-\u9fa5]+)/g, replacement: " $1$2" },
-            { pattern: /(_[\u4e00-\u9fa5]+_)([\u4e00-\u9fa5]+)/g, replacement: " $1 $2" },
-            { pattern: /（([\s\S]*?)）/g, replacement: "($1)" }, // 中文（）
-            // { pattern: /：/g, replacement: ":" }, // 中文：
-            { pattern: /\*\* (.*?) \*\*/g, replacement: "\*\*$1\*\*" } // 加粗
-        ];
-        mdRuleMap.forEach(({ pattern, replacement }) => {
-            translatedText = translatedText.replace(pattern, replacement);
-        });
-
-        // 更新
-        if (is_oldLatex || is_acmsguru) {
-            // oldlatex
-            translatedText = $.parseHTML(translatedText);
-            translateDiv.empty().append($(translatedText));
-            return {
-                translateDiv: translateDiv,
-                status: status,
-                copyDiv: textElement,
-                panelDiv: panelDiv,
-                upButton: upButton
-            };
         } else {
-            // 渲染MarkDown
-            var md = window.markdownit();
-            var html = md.render(translatedText);
-            translateDiv.html(html);
-            // 渲染Latex
-            MathJax.Hub.Queue(["Typeset", MathJax.Hub, translateDiv.get(0)]);
-
-            return {
-                translateDiv: translateDiv,
-                status: status,
-                copyDiv: textElement,
-                panelDiv: panelDiv,
-                upButton: upButton
-            };
-        }
-
-    }
-
-    // ChatGPT
-    async function translate_openai(raw) {
-        var openai_retext = "";
-        var data;
-        if (is_oldLatex || is_acmsguru) {
-            data = {
-                model: (openai_model !== null && openai_model !== "") ? openai_model : 'gpt-3.5-turbo',
-                messages: [{
-                    role: "user",
-                    content: "请将下面的文本翻译为中文，这是一道编程竞赛题描述的一部分，注意术语的翻译，注意保持其中的【】、HTML标签本身以及其中的内容不翻译不变动，你只需要回复翻译后的内容即可，不要回复任何其他内容：\n\n" + raw
-                }],
-                temperature: 0.7,
-                ...Object.assign({}, ...openai_data)
-            };
-        } else {
-            data = {
-                model: (openai_model !== null && openai_model !== "") ? openai_model : 'gpt-3.5-turbo',
-                messages: [{
-                    role: "user",
-                    content: "请将下面的文本翻译为中文，这是一道编程竞赛题描述的一部分，注意术语的翻译，注意保持其中的latex公式不翻译，你只需要回复翻译后的内容即可，不要回复任何其他内容：\n\n" + raw
-                }],
-                temperature: 0.7
-            };
-        };
-        return new Promise(function(resolve, reject) {
-            GM_xmlhttpRequest({
-                method: 'POST',
-                url: (openai_proxy !== null && openai_proxy !== "") ? openai_proxy : 'https://api.openai.com/v1/chat/completions',
-
-                data: JSON.stringify(data),
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + openai_key,
-                    ...Object.assign({}, ...openai_header)
-                },
-                responseType: 'json',
-                onload: function(response) {
-                    if (!response.response) {
-                        reject("发生了未知的错误，如果你启用了代理API，请确认是否填写正确，并确保代理能够正常工作。\n\n如果无法解决，请前往 https://greasyfork.org/zh-CN/scripts/465777/feedback 寻求帮助 请注意打码响应报文的敏感部分\n\n响应报文：" + JSON.stringify(response));
-                    }
-                    else if (!response.response.choices || response.response.choices.length < 1 || !response.response.choices[0].message) {
-                        resolve("翻译出错，请重试\n\n如果无法解决，请前往 https://greasyfork.org/zh-CN/scripts/465777/feedback 寻求帮助 \n\n报错信息：" + JSON.stringify(response.response, null, '\n'));
-                    } else {
-                        openai_retext = response.response.choices[0].message.content;
-                        resolve(openai_retext);
-                    }
-                },
-                onerror: function(response) {
-                    reject("发生了未知的错误，请确认你是否能正常访问OpenAi的接口，如果使用代理API，请检查是否正常工作\n\n如果无法解决，请前往 https://greasyfork.org/zh-CN/scripts/465777/feedback 寻求帮助 请注意打码响应报文的敏感部分\n\n响应报文：" + JSON.stringify(response));
-                },
+            // 执行收起操作
+            upButton.html(putawayIcon);
+            $(translateDiv).css({
+                display: "",
+                transition: "height 2s"
             });
-        });
-    }
-
-    //--谷歌翻译--start
-    async function translate_gg(raw) {
-        return new Promise((resolve, reject) => {
-            const url = 'https://translate.google.com/m';
-            const params = `tl=zh-CN&q=${encodeURIComponent(raw)}`;
-
-            GM_xmlhttpRequest({
-                method: 'GET',
-                url: `${url}?${params}`,
-                onload: function(response) {
-                    const html = response.responseText;
-                    const translatedText = $(html).find('.result-container').text();
-                    resolve(translatedText);
-                },
-                onerror: function(response) {
-                    reject("发生了未知的错误，请确认你是否能正常访问Google翻译，\n\n如果无法解决，请前往 https://greasyfork.org/zh-CN/scripts/465777/feedback 寻求帮助 请注意打码报错信息的敏感部分\n\n响应报文：" + JSON.stringify(response))
-                }
-            });
-        });
-    }
-    //--谷歌翻译--end
-
-    //--有道翻译m--start
-    async function translate_youdao_mobile(raw) {
-        const options = {
-            method: "POST",
-            url: 'http://m.youdao.com/translate',
-            data: "inputtext=" + encodeURIComponent(raw) + "&type=AUTO",
-            anonymous: true,
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-                'Host': 'm.youdao.com',
-                'Origin': 'http://m.youdao.com',
-                'Referer': 'http://m.youdao.com/translate',
-            }
-        }
-        return await BaseTranslate('有道翻译mobile', raw, options, res => /id="translateResult">\s*?<li>([\s\S]*?)<\/li>\s*?<\/ul/.exec(res)[1])
-    }
-    //--有道翻译m--end
-
-    //--彩云翻译--start
-    async function translate_caiyun_startup() {
-        const browser_id = CryptoJS.MD5(Math.random().toString()).toString();
-        sessionStorage.setItem('caiyun_id', browser_id);
-        const options = {
-            method: "POST",
-            url: 'https://api.interpreter.caiyunai.com/v1/user/jwt/generate',
-            headers: {
-                "Content-Type": "application/json",
-                "X-Authorization": "token:qgemv4jr1y38jyq6vhvi",
-                "Origin": "https://fanyi.caiyunapp.com",
-            },
-            data: JSON.stringify({ browser_id }),
-        }
-        const res = await Request(options);
-        sessionStorage.setItem('caiyun_jwt', JSON.parse(res.responseText).jwt);
-    }
-
-    async function translate_caiyun(raw) {
-        const source = "NOPQRSTUVWXYZABCDEFGHIJKLMnopqrstuvwxyzabcdefghijklm";
-        const dic = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"].reduce((dic, current, index) => { dic[current] = source[index]; return dic }, {});
-        // 解码
-        const decodeUnicode = str => {
-            const decoder = new TextDecoder();
-            const data = Uint8Array.from(atob(str), c => c.charCodeAt(0));
-            return decoder.decode(data);
-        };
-        const decoder = line => decodeUnicode([...line].map(i => dic[i] || i).join(""));
-        const options = {
-            method: "POST",
-            url: 'https://api.interpreter.caiyunai.com/v1/translator',
-            data: JSON.stringify({
-                "source": raw.split('\n'),
-                "trans_type": "auto2zh",
-                "detect": true,
-                "browser_id": sessionStorage.getItem('caiyun_id')
-            }),
-            headers: {
-                "X-Authorization": "token:qgemv4jr1y38jyq6vhvi",
-                "T-Authorization": sessionStorage.getItem('caiyun_jwt')
-            }
-        }
-        return await BaseTranslate('彩云小译', raw, options, res => JSON.parse(res).target.map(decoder).join('\n'))
-    }
-    //--彩云翻译--end
-
-    //--Deepl翻译--start
-    function getTimeStamp(iCount) {
-        const ts = Date.now();
-        if (iCount !== 0) {
-            iCount = iCount + 1;
-            return ts - (ts % iCount) + iCount;
-        } else {
-            return ts;
-        }
-    }
-
-    async function translate_deepl(raw) {
-        const id = (Math.floor(Math.random() * 99999) + 100000) * 1000;
-        const data = {
-            jsonrpc: '2.0',
-            method: 'LMT_handle_texts',
-            id,
-            params: {
-                splitting: 'newlines',
-                lang: {
-                    source_lang_user_selected: 'auto',
-                    target_lang: 'ZH',
-                },
-                texts: [{
-                    text: raw,
-                    requestAlternatives: 3
-                }],
-                timestamp: getTimeStamp(raw.split('i').length - 1)
-            }
-        }
-        let postData = JSON.stringify(data);
-        if ((id + 5) % 29 === 0 || (id + 3) % 13 === 0) {
-            postData = postData.replace('"method":"', '"method" : "');
-        } else {
-            postData = postData.replace('"method":"', '"method": "');
-        }
-        const options = {
-            method: 'POST',
-            url: 'https://www2.deepl.com/jsonrpc',
-            data: postData,
-            headers: {
-                'Content-Type': 'application/json',
-                'Host': 'www2.deepl.com',
-                'Origin': 'https://www.deepl.com',
-                'Referer': 'https://www.deepl.com/',
-            },
-            anonymous: true,
-            nocache: true,
-        }
-        return await BaseTranslate('Deepl翻译', raw, options, res => JSON.parse(res).result.texts[0].text)
-    }
-
-    //--Deepl翻译--end
-
-    //--讯飞听见翻译--end
-    async function translate_iflyrec(text) {
-        const options = {
-            method: "POST",
-            url: 'https://www.iflyrec.com/TranslationService/v1/textTranslation',
-            data: JSON.stringify({
-                "from": "2",
-                "to": "1",
-                "contents": [{
-                    "text": text,
-                    "frontBlankLine": 0
-                }]
-            }),
-            anonymous: true,
-            headers: {
-                'Content-Type': 'application/json',
-                'Origin': 'https://www.iflyrec.com',
-            },
-            responseType: "json",
-        };
-        return await BaseTranslate('讯飞翻译', text, options, res => JSON.parse(res).biz[0].translateResult.replace(/\\n/g, "\n\n"));
-    }
-    //--讯飞听见翻译--end
-
-    //--异步请求包装工具--start
-    async function PromiseRetryWrap(task, options, ...values) {
-        const { RetryTimes, ErrProcesser } = options || {};
-        let retryTimes = RetryTimes || 5;
-        const usedErrProcesser = ErrProcesser || (err => { throw err });
-        if (!task) return;
-        while (true) {
-            try {
-                return await task(...values);
-            } catch (err) {
-                if (!--retryTimes) {
-                    console.warn(err);
-                    return usedErrProcesser(err);
-                }
-            }
-        }
-    }
-
-    async function BaseTranslate(name, raw, options, processer) {
-        let errtext;
-        const toDo = async () => {
-            var tmp;
-            try {
-                const data = await Request(options);
-                tmp = data.responseText;
-                let result = await processer(tmp);
-                return result;
-            } catch (err) {
-                errtext = tmp;
-                throw {
-                    responseText: tmp,
-                    err: err
-                }
-            }
-        }
-        return await PromiseRetryWrap(toDo, { RetryTimes: 3, ErrProcesser: () => "翻译出错，请查看报错信息，并重试或更换翻译接口\n\n如果无法解决，请前往 https://greasyfork.org/zh-CN/scripts/465777/feedback 寻求帮助 请注意打码报错信息的敏感部分\n\n报错信息：" + errtext })
-    }
-
-    function Request(options) {
-        return new Promise((reslove, reject) => GM_xmlhttpRequest({ ...options, onload: reslove, onerror: reject }))
-    }
-
-    //--异步请求包装工具--end
-
-    // 开始
-    document.addEventListener("DOMContentLoaded", function() {
-        function checkJQuery(retryDelay) {
-            if (typeof jQuery === 'undefined') {
-                console.warn("JQuery未加载，" + retryDelay + "毫秒后重试");
-                setTimeout(function() {
-                    var newRetryDelay = Math.min(retryDelay * 2, 2000);
-                    checkJQuery(newRetryDelay);
-                }, retryDelay);
-            } else {
-                executeFunctions();
-            }
-        }
-        checkJQuery(50);
-        function executeFunctions() {
-            init();
-            ShowAlertMessage();
-            settingPanel();
-            checkScriptVersion();
-            toZH_CN();
-            var newElement = $("<div></div>").addClass("alert alert-info CFBetter_alert")
-                .html(`Codeforces Better! —— 正在等待页面资源加载……`)
-                .css({
-                    "margin": "1em",
-                    "text-align": "center",
-                    "font-weight": "600",
-                    "position": "relative"
-                });
-
-            async function processPage() {
-                if (showLoading) newElement.html('Codeforces Better! —— 正在等待LaTeX渲染队列全部完成……');
-                await waitUntilIdleThenDo(async function() {
-                    if (showJumpToLuogu && is_problem) CF2luogu();
-
-                    Promise.resolve()
-                        .then(async () => {
-                            if (showLoading && is_problem) newElement.html('Codeforces Better! —— 正在连接数据库……');
-                            await delay(100);
-                            if (is_problem && problemPageCodeEditor) await initDB();
-                        })
-                        .then(() => {
-                            if (showLoading && expandFoldingblocks) newElement.html('Codeforces Better! —— 正在展开折叠块……');
-                            return delay(100).then(() => { if (expandFoldingblocks) ExpandFoldingblocks() });
-                        })
-                        .then(() => {
-                            if (showLoading && commentPaging) newElement.html('Codeforces Better! —— 正在对评论区分页……');
-                            return delay(100).then(() => { if (commentPaging) CommentPagination() });
-                        })
-                        .then(() => {
-                            if (showLoading && is_acmsguru) newElement.html('Codeforces Better! —— 正在为acmsguru题面重新划分div……');
-                            return delay(100).then(() => { if (is_acmsguru) acmsguruReblock() });
-                        })
-                        .then(() => {
-                            if (showLoading) newElement.html('Codeforces Better! —— 正在加载按钮……');
-                            return delay(100).then(() => addConversionButton());
-                        })
-                        .then(() => {
-                            if (showLoading && commentTranslationMode == "2") newElement.html('Codeforces Better! —— 正在加载选段翻译……');
-                            return delay(100).then(() => { if (commentTranslationMode == "2") multiChoiceTranslation() });
-                        })
-                        .then(async () => {
-                            if (showLoading && renderPerfOpt) newElement.html('Codeforces Better! —— 正在优化折叠块渲染……');
-                            await delay(100);
-                            if (renderPerfOpt) await RenderPerfOpt();
-                        })
-                        .then(async () => {
-                            if (showLoading && standingsRecolor && is_cfStandings) newElement.html('Codeforces Better! —— 正在为榜单重新着色……');
-                            await delay(100);
-                            if (standingsRecolor && is_cfStandings) await recolorStandings();
-                        })
-                        .then(async () => {
-                            if (showLoading && is_problem) newElement.html('Codeforces Better! —— 正在添加代码编辑器……');
-                            await delay(100);
-                            if (is_problem && problemPageCodeEditor) await addProblemPageCodeEditor();
-                        })
-                        .then(async () => {
-                            await delay(100);
-                            if (showLoading && showClistRating_contest && is_contest) {
-                                newElement.html('Codeforces Better! —— 正在加载Clist数据……');
-                                await showRatingByClist_contest();
-                            }
-                            if (showLoading && showClistRating_problemset && is_problemset) {
-                                newElement.html('Codeforces Better! —— 正在加载Clist数据……');
-                                await showRatingByClist_problemset();
-                            }
-                            if (showLoading && showClistRating_problem && is_problem) {
-                                newElement.html('Codeforces Better! —— 正在加载Clist数据……');
-                                await showRatingByClist_problem();
-                            }
-                        })
-                        .then(() => {
-                            alertZh();
-                            if (showLoading) {
-                                newElement.html('Codeforces Better! —— 加载已完成');
-                                newElement.removeClass('alert-info').addClass('alert-success');
-                                setTimeout(function() {
-                                    newElement.remove();
-                                }, 3000);
-                            }
-                        })
-                        .catch((error) => {
-                            console.warn(error);
-                        });
-                });
-            }
-
-            function delay(ms) {
-                return new Promise((resolve) => setTimeout(resolve, ms));
-            }
-
-            if (showLoading) {
-                if (is_mSite) $("header").after(newElement);
-                else $(".menu-box:first").next().after(newElement);
-            }
-
-            if (loaded) {
-                processPage();
-            } else {
-                // 页面完全加载完成后执行
-                window.onload = function() {
-                    processPage();
-                };
-            }
         }
     });
 
-    // 配置自动迁移代码（将在10个小版本后移除-1.66）
-    if (GM_getValue("openai_key") || GM_getValue("api2d_key")) {
-        const newConfig = { "choice": -1, "configurations": [] };
-        if (GM_getValue("openai_key")) {
-            let config1 = {
-                "note": "我的配置1",
-                "model": GM_getValue("openai_model") || "",
-                "key": GM_getValue("openai_key"),
-                "proxy": GM_getValue("openai_proxy") || "",
-                "_header": "",
-                "_data": ""
-            }
-            if (GM_getValue("translation") === "openai") newConfig.choice = 0;
-            newConfig.configurations.push(config1);
+    // 关闭按钮
+    closeButton.on("click", function() {
+        $(translateDiv).remove();
+        $(panelDiv).remove();
+    });
+
+    // 替换latex公式
+    if (is_oldLatex) {
+        let regex = /<span\s+class="tex-span">.*?<\/span>/gi;
+        matches = matches.concat(text.match(regex));
+        text = replaceBlock(text, matches, replacements);
+        text = text.replace(/<p>(.*?)<\/p>/g, "$1\n\n"); // <p/>标签换为换行
+    } else if (is_acmsguru) {
+        let regex = /<i>.*?<\/i>|<sub>.*?<\/sub>|<sup>.*?<\/sup>|<pre>.*?<\/pre>/gi;
+        matches = matches.concat(text.match(regex));
+        text = replaceBlock(text, matches, replacements);
+    } else if (translation != "openai") {
+        // 使用GPT翻译时不必替换latex公式
+        let regex = /\$\$(\\.|[^\$])*?\$\$|\$(\\.|[^\$])*?\$/g;
+        matches = matches.concat(text.match(regex));
+        text = replaceBlock(text, matches, replacements);
+    }
+    // 字符数上限
+    const translationLimits = {
+        deepl: 5000,
+        iflyrec: 2000,
+        youdao: 600,
+        google: 5000,
+        caiyun: 5000
+    };
+    if (translationLimits.hasOwnProperty(translation) && text.length > translationLimits[translation]) {
+        const shouldContinue = await showWordsExceededDialog(button, translationLimits[translation], text.length);
+        if (!shouldContinue) {
+            status = 1;
+            return {
+                translateDiv: translateDiv,
+                status: status
+            };
         }
-        if (GM_getValue("api2d_key")) {
-            let config2 = {
-                "note": "api2d",
-                "model": GM_getValue("api2d_model"),
-                "key": GM_getValue("api2d_key"),
-                "proxy": GM_getValue("api2d_request_entry") + '/v1/chat/completions',
-                "_header": GM_getValue("x_api2d_no_cache") ? "" : " x-api2d-no-cache : 1",
-                "_data": ""
+    }
+    // 翻译
+    async function translate(translation) {
+        try {
+            if (translation == "deepl") {
+                translateDiv.html(`正在使用 ${translationService[translation]} 翻译中……请稍等`);
+                translatedText = await translate_deepl(text);
+            } else if (translation == "iflyrec") {
+                translateDiv.html(`正在使用 ${translationService[translation]} 翻译中……请稍等`);
+                translatedText = await translate_iflyrec(text);
+            } else if (translation == "youdao") {
+                translateDiv.html(`正在使用 ${translationService[translation]} 翻译中……请稍等`);
+                translatedText = await translate_youdao_mobile(text);
+            } else if (translation == "google") {
+                translateDiv.html(`正在使用 ${translationService[translation]} 翻译中……请稍等`);
+                translatedText = await translate_gg(text);
+            } else if (translation == "caiyun") {
+                translateDiv.html(`正在使用 ${translationService[translation]} 翻译中……请稍等`);
+                await translate_caiyun_startup();
+                translatedText = await translate_caiyun(text);
+            } else if (translation == "openai") {
+                translateDiv.html("正在使用 ChatGPT 翻译中……" +
+                    "<br><br>应用的配置：" + opneaiConfig.configurations[opneaiConfig.choice].note +
+                    "<br><br>使用 ChatGPT 翻译需要很长的时间，请耐心等待");
+                translatedText = await translate_openai(text);
             }
-            if (GM_getValue("translation") === "api2d") {
-                if (GM_getValue("openai_key")) newConfig.choice = 1;
-                else newConfig.choice = 0;
-            }
-            newConfig.configurations.push(config2);
+            if (/^翻译出错/.test(translatedText)) status = 2;
+        } catch (error) {
+            status = 2;
+            translatedText = error;
         }
-        GM_setValue("chatgpt-config", newConfig);
-        const keysToDelete = ["openai_key", "openai_model", "openai_proxy", "api2d_key", "api2d_model", "api2d_request_entry", "x_api2d_no_cache", "showOpneAiAdvanced"];
-        keysToDelete.forEach(key => {
-            if (GM_getValue(key) != undefined) GM_deleteValue(key);
+    }
+    if (is_comment && commentTranslationChoice != "0") await translate(commentTranslationChoice);
+    else await translate(translation);
+
+    // 还原latex公式
+    translatedText = translatedText.replace(/】\s*【/g, '】 【');
+    translatedText = translatedText.replace(/\]\s*\[/g, '] [');
+    translatedText = translatedText.replace(/\}\s*\{/g, '} {');
+    if (is_oldLatex) {
+        translatedText = translatedText.replace(/(.+?)(\n\n|$)/g, "<p>$1</p>"); // 还原为<p/>标签
+        translatedText = recoverBlock(translatedText, matches, replacements);
+    } else if (is_acmsguru) {
+        translatedText = recoverBlock(translatedText, matches, replacements);
+    } else if (translation != "openai") {
+        translatedText = recoverBlock(translatedText, matches, replacements);
+    }
+
+    // 结果复制按钮
+    if (!is_oldLatex && !is_acmsguru) {
+        // 创建一个隐藏的元素来保存 translatedText 的值
+        var textElement = document.createElement("div");
+        textElement.style.display = "none";
+        textElement.textContent = translatedText;
+        translateDiv.parent().insertBefore(textElement, translateDiv);
+
+        // 复制按钮
+        copyButton.on("click", function() {
+            var translatedText = textElement.textContent;
+            GM_setClipboard(translatedText);
+            copyButton.html(copyedIcon);
+            copyButton.css({ 'fill': '#8bc34a' });
+            // 复制提示
+            setTimeout(() => {
+                copyButton.html(copyIcon);
+                copyButton.css({ 'fill': '' });
+            }, 2000);
         });
-        if (GM_getValue("translation") === "api2d") GM_setValue("translation", "openai");
-        location.reload();
     }
-    // 配置自动迁移代码（将在10个小版本后移除-1.71）
-    if (GM_getValue("darkMode") === true || GM_getValue("darkMode") === false) {
-        GM_setValue("darkMode", "follow");
-        location.reload();
+
+    // 转义LaTex中的特殊符号
+    if (!is_oldLatex && !is_acmsguru) {
+        const escapeRules = [
+            { pattern: /(?<!\\)>(?!\s)/g, replacement: " &gt; " }, // >符号
+            { pattern: /(?<!\\)</g, replacement: " &lt; " }, // <符号
+            { pattern: /(?<!\\)\*/g, replacement: " &#42; " }, // *符号
+            { pattern: /(?<!\\)_/g, replacement: " &#95; " }, // _符号
+            { pattern: /(?<!\\)\\\\(?=\s)/g, replacement: "\\\\\\\\" }, // \\符号
+            { pattern: /(?<!\\)\\(?![\\a-zA-Z0-9])/g, replacement: "\\\\" }, // \符号
+        ];
+
+        let latexMatches = [...translatedText.matchAll(/\$\$([\s\S]*?)\$\$|\$(.*?)\$|\$([\s\S]*?)\$/g)];
+
+        for (const match of latexMatches) {
+            const matchedText = match[0];
+            var escapedText = matchedText;
+
+            for (const rule of escapeRules) {
+                escapedText = escapedText.replaceAll(rule.pattern, rule.replacement);
+            }
+            escapedText = escapedText.replace(/\$\$/g, "$$$$$$$$");// $$符号（因为后面需要作为replacement）
+            translatedText = translatedText.replace(matchedText, escapedText);
+        }
     }
+
+    // 使符合mathjx的转换语法
+    const mathjaxRuleMap = [
+        { pattern: /\$/g, replacement: "$$$$$$" }, // $$ 行间
+    ];
+    mathjaxRuleMap.forEach(({ pattern, replacement }) => {
+        translatedText = translatedText.replace(pattern, replacement);
+    });
+
+    // markdown修正
+    const mdRuleMap = [
+        { pattern: /(\s_[\u4e00-\u9fa5]+_)([\u4e00-\u9fa5]+)/g, replacement: "$1 $2" }, // 斜体
+        { pattern: /(_[\u4e00-\u9fa5]+_\s)([\u4e00-\u9fa5]+)/g, replacement: " $1$2" },
+        { pattern: /(_[\u4e00-\u9fa5]+_)([\u4e00-\u9fa5]+)/g, replacement: " $1 $2" },
+        { pattern: /（([\s\S]*?)）/g, replacement: "($1)" }, // 中文（）
+        // { pattern: /：/g, replacement: ":" }, // 中文：
+        { pattern: /\*\* (.*?) \*\*/g, replacement: "\*\*$1\*\*" } // 加粗
+    ];
+    mdRuleMap.forEach(({ pattern, replacement }) => {
+        translatedText = translatedText.replace(pattern, replacement);
+    });
+
+    // 更新
+    if (is_oldLatex || is_acmsguru) {
+        // oldlatex
+        translatedText = $.parseHTML(translatedText);
+        translateDiv.empty().append($(translatedText));
+        return {
+            translateDiv: translateDiv,
+            status: status,
+            copyDiv: textElement,
+            panelDiv: panelDiv,
+            upButton: upButton
+        };
+    } else {
+        // 渲染MarkDown
+        var md = window.markdownit();
+        var html = md.render(translatedText);
+        translateDiv.html(html);
+        // 渲染Latex
+        MathJax.Hub.Queue(["Typeset", MathJax.Hub, translateDiv.get(0)]);
+
+        return {
+            translateDiv: translateDiv,
+            status: status,
+            copyDiv: textElement,
+            panelDiv: panelDiv,
+            upButton: upButton
+        };
+    }
+
+}
+
+// ChatGPT
+async function translate_openai(raw) {
+    var openai_retext = "";
+    var data;
+    if (is_oldLatex || is_acmsguru) {
+        data = {
+            model: (openai_model !== null && openai_model !== "") ? openai_model : 'gpt-3.5-turbo',
+            messages: [{
+                role: "user",
+                content: "请将下面的文本翻译为中文，这是一道编程竞赛题描述的一部分，注意术语的翻译，注意保持其中的【】、HTML标签本身以及其中的内容不翻译不变动，你只需要回复翻译后的内容即可，不要回复任何其他内容：\n\n" + raw
+            }],
+            temperature: 0.7,
+            ...Object.assign({}, ...openai_data)
+        };
+    } else {
+        data = {
+            model: (openai_model !== null && openai_model !== "") ? openai_model : 'gpt-3.5-turbo',
+            messages: [{
+                role: "user",
+                content: "请将下面的文本翻译为中文，这是一道编程竞赛题描述的一部分，注意术语的翻译，注意保持其中的latex公式不翻译，你只需要回复翻译后的内容即可，不要回复任何其他内容：\n\n" + raw
+            }],
+            temperature: 0.7
+        };
+    };
+    return new Promise(function(resolve, reject) {
+        GM_xmlhttpRequest({
+            method: 'POST',
+            url: (openai_proxy !== null && openai_proxy !== "") ? openai_proxy : 'https://api.openai.com/v1/chat/completions',
+
+            data: JSON.stringify(data),
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + openai_key,
+                ...Object.assign({}, ...openai_header)
+            },
+            responseType: 'json',
+            onload: function(response) {
+                if (!response.response) {
+                    reject("发生了未知的错误，如果你启用了代理API，请确认是否填写正确，并确保代理能够正常工作。\n\n如果无法解决，请前往 https://greasyfork.org/zh-CN/scripts/465777/feedback 寻求帮助 请注意打码响应报文的敏感部分\n\n响应报文：" + JSON.stringify(response));
+                }
+                else if (!response.response.choices || response.response.choices.length < 1 || !response.response.choices[0].message) {
+                    resolve("翻译出错，请重试\n\n如果无法解决，请前往 https://greasyfork.org/zh-CN/scripts/465777/feedback 寻求帮助 \n\n报错信息：" + JSON.stringify(response.response, null, '\n'));
+                } else {
+                    openai_retext = response.response.choices[0].message.content;
+                    resolve(openai_retext);
+                }
+            },
+            onerror: function(response) {
+                reject("发生了未知的错误，请确认你是否能正常访问OpenAi的接口，如果使用代理API，请检查是否正常工作\n\n如果无法解决，请前往 https://greasyfork.org/zh-CN/scripts/465777/feedback 寻求帮助 请注意打码响应报文的敏感部分\n\n响应报文：" + JSON.stringify(response));
+            },
+        });
+    });
+}
+
+//--谷歌翻译--start
+async function translate_gg(raw) {
+    return new Promise((resolve, reject) => {
+        const url = 'https://translate.google.com/m';
+        const params = `tl=zh-CN&q=${encodeURIComponent(raw)}`;
+
+        GM_xmlhttpRequest({
+            method: 'GET',
+            url: `${url}?${params}`,
+            onload: function(response) {
+                const html = response.responseText;
+                const translatedText = $(html).find('.result-container').text();
+                resolve(translatedText);
+            },
+            onerror: function(response) {
+                reject("发生了未知的错误，请确认你是否能正常访问Google翻译，\n\n如果无法解决，请前往 https://greasyfork.org/zh-CN/scripts/465777/feedback 寻求帮助 请注意打码报错信息的敏感部分\n\n响应报文：" + JSON.stringify(response))
+            }
+        });
+    });
+}
+//--谷歌翻译--end
+
+//--有道翻译m--start
+async function translate_youdao_mobile(raw) {
+    const options = {
+        method: "POST",
+        url: 'http://m.youdao.com/translate',
+        data: "inputtext=" + encodeURIComponent(raw) + "&type=AUTO",
+        anonymous: true,
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            'Host': 'm.youdao.com',
+            'Origin': 'http://m.youdao.com',
+            'Referer': 'http://m.youdao.com/translate',
+        }
+    }
+    return await BaseTranslate('有道翻译mobile', raw, options, res => /id="translateResult">\s*?<li>([\s\S]*?)<\/li>\s*?<\/ul/.exec(res)[1])
+}
+//--有道翻译m--end
+
+//--彩云翻译--start
+async function translate_caiyun_startup() {
+    const browser_id = CryptoJS.MD5(Math.random().toString()).toString();
+    sessionStorage.setItem('caiyun_id', browser_id);
+    const options = {
+        method: "POST",
+        url: 'https://api.interpreter.caiyunai.com/v1/user/jwt/generate',
+        headers: {
+            "Content-Type": "application/json",
+            "X-Authorization": "token:qgemv4jr1y38jyq6vhvi",
+            "Origin": "https://fanyi.caiyunapp.com",
+        },
+        data: JSON.stringify({ browser_id }),
+    }
+    const res = await Request(options);
+    sessionStorage.setItem('caiyun_jwt', JSON.parse(res.responseText).jwt);
+}
+
+async function translate_caiyun(raw) {
+    const source = "NOPQRSTUVWXYZABCDEFGHIJKLMnopqrstuvwxyzabcdefghijklm";
+    const dic = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"].reduce((dic, current, index) => { dic[current] = source[index]; return dic }, {});
+    // 解码
+    const decodeUnicode = str => {
+        const decoder = new TextDecoder();
+        const data = Uint8Array.from(atob(str), c => c.charCodeAt(0));
+        return decoder.decode(data);
+    };
+    const decoder = line => decodeUnicode([...line].map(i => dic[i] || i).join(""));
+    const options = {
+        method: "POST",
+        url: 'https://api.interpreter.caiyunai.com/v1/translator',
+        data: JSON.stringify({
+            "source": raw.split('\n'),
+            "trans_type": "auto2zh",
+            "detect": true,
+            "browser_id": sessionStorage.getItem('caiyun_id')
+        }),
+        headers: {
+            "X-Authorization": "token:qgemv4jr1y38jyq6vhvi",
+            "T-Authorization": sessionStorage.getItem('caiyun_jwt')
+        }
+    }
+    return await BaseTranslate('彩云小译', raw, options, res => JSON.parse(res).target.map(decoder).join('\n'))
+}
+//--彩云翻译--end
+
+//--Deepl翻译--start
+function getTimeStamp(iCount) {
+    const ts = Date.now();
+    if (iCount !== 0) {
+        iCount = iCount + 1;
+        return ts - (ts % iCount) + iCount;
+    } else {
+        return ts;
+    }
+}
+
+async function translate_deepl(raw) {
+    const id = (Math.floor(Math.random() * 99999) + 100000) * 1000;
+    const data = {
+        jsonrpc: '2.0',
+        method: 'LMT_handle_texts',
+        id,
+        params: {
+            splitting: 'newlines',
+            lang: {
+                source_lang_user_selected: 'auto',
+                target_lang: 'ZH',
+            },
+            texts: [{
+                text: raw,
+                requestAlternatives: 3
+            }],
+            timestamp: getTimeStamp(raw.split('i').length - 1)
+        }
+    }
+    let postData = JSON.stringify(data);
+    if ((id + 5) % 29 === 0 || (id + 3) % 13 === 0) {
+        postData = postData.replace('"method":"', '"method" : "');
+    } else {
+        postData = postData.replace('"method":"', '"method": "');
+    }
+    const options = {
+        method: 'POST',
+        url: 'https://www2.deepl.com/jsonrpc',
+        data: postData,
+        headers: {
+            'Content-Type': 'application/json',
+            'Host': 'www2.deepl.com',
+            'Origin': 'https://www.deepl.com',
+            'Referer': 'https://www.deepl.com/',
+        },
+        anonymous: true,
+        nocache: true,
+    }
+    return await BaseTranslate('Deepl翻译', raw, options, res => JSON.parse(res).result.texts[0].text)
+}
+
+//--Deepl翻译--end
+
+//--讯飞听见翻译--end
+async function translate_iflyrec(text) {
+    const options = {
+        method: "POST",
+        url: 'https://www.iflyrec.com/TranslationService/v1/textTranslation',
+        data: JSON.stringify({
+            "from": "2",
+            "to": "1",
+            "contents": [{
+                "text": text,
+                "frontBlankLine": 0
+            }]
+        }),
+        anonymous: true,
+        headers: {
+            'Content-Type': 'application/json',
+            'Origin': 'https://www.iflyrec.com',
+        },
+        responseType: "json",
+    };
+    return await BaseTranslate('讯飞翻译', text, options, res => JSON.parse(res).biz[0].translateResult.replace(/\\n/g, "\n\n"));
+}
+//--讯飞听见翻译--end
+
+//--异步请求包装工具--start
+async function PromiseRetryWrap(task, options, ...values) {
+    const { RetryTimes, ErrProcesser } = options || {};
+    let retryTimes = RetryTimes || 5;
+    const usedErrProcesser = ErrProcesser || (err => { throw err });
+    if (!task) return;
+    while (true) {
+        try {
+            return await task(...values);
+        } catch (err) {
+            if (!--retryTimes) {
+                console.warn(err);
+                return usedErrProcesser(err);
+            }
+        }
+    }
+}
+
+async function BaseTranslate(name, raw, options, processer) {
+    let errtext;
+    const toDo = async () => {
+        var tmp;
+        try {
+            const data = await Request(options);
+            tmp = data.responseText;
+            let result = await processer(tmp);
+            return result;
+        } catch (err) {
+            errtext = tmp;
+            throw {
+                responseText: tmp,
+                err: err
+            }
+        }
+    }
+    return await PromiseRetryWrap(toDo, { RetryTimes: 3, ErrProcesser: () => "翻译出错，请查看报错信息，并重试或更换翻译接口\n\n如果无法解决，请前往 https://greasyfork.org/zh-CN/scripts/465777/feedback 寻求帮助 请注意打码报错信息的敏感部分\n\n报错信息：" + errtext })
+}
+
+function Request(options) {
+    return new Promise((reslove, reject) => GM_xmlhttpRequest({ ...options, onload: reslove, onerror: reject }))
+}
+
+//--异步请求包装工具--end
+
+// 开始
+document.addEventListener("DOMContentLoaded", function() {
+    function checkJQuery(retryDelay) {
+        if (typeof jQuery === 'undefined') {
+            console.warn("JQuery未加载，" + retryDelay + "毫秒后重试");
+            setTimeout(function() {
+                var newRetryDelay = Math.min(retryDelay * 2, 2000);
+                checkJQuery(newRetryDelay);
+            }, retryDelay);
+        } else {
+            executeFunctions();
+        }
+    }
+    checkJQuery(50);
+    function executeFunctions() {
+        init();
+        ShowAlertMessage();
+        settingPanel();
+        checkScriptVersion();
+        toZH_CN();
+        var newElement = $("<div></div>").addClass("alert alert-info CFBetter_alert")
+            .html(`Codeforces Better! —— 正在等待页面资源加载……`)
+            .css({
+                "margin": "1em",
+                "text-align": "center",
+                "font-weight": "600",
+                "position": "relative"
+            });
+
+        async function processPage() {
+            if (showLoading) newElement.html('Codeforces Better! —— 正在等待LaTeX渲染队列全部完成……');
+            await waitUntilIdleThenDo(async function() {
+                if (showJumpToLuogu && is_problem) CF2luogu();
+
+                Promise.resolve()
+                    .then(async () => {
+                        if (showLoading && is_problem) newElement.html('Codeforces Better! —— 正在连接数据库……');
+                        await delay(100);
+                        if (is_problem && problemPageCodeEditor) await initDB();
+                    })
+                    .then(() => {
+                        if (showLoading && expandFoldingblocks) newElement.html('Codeforces Better! —— 正在展开折叠块……');
+                        return delay(100).then(() => { if (expandFoldingblocks) ExpandFoldingblocks() });
+                    })
+                    .then(() => {
+                        if (showLoading && commentPaging) newElement.html('Codeforces Better! —— 正在对评论区分页……');
+                        return delay(100).then(() => { if (commentPaging) CommentPagination() });
+                    })
+                    .then(() => {
+                        if (showLoading && is_acmsguru) newElement.html('Codeforces Better! —— 正在为acmsguru题面重新划分div……');
+                        return delay(100).then(() => { if (is_acmsguru) acmsguruReblock() });
+                    })
+                    .then(() => {
+                        if (showLoading) newElement.html('Codeforces Better! —— 正在加载按钮……');
+                        return delay(100).then(() => addConversionButton());
+                    })
+                    .then(() => {
+                        if (showLoading && commentTranslationMode == "2") newElement.html('Codeforces Better! —— 正在加载选段翻译……');
+                        return delay(100).then(() => { if (commentTranslationMode == "2") multiChoiceTranslation() });
+                    })
+                    .then(async () => {
+                        if (showLoading && renderPerfOpt) newElement.html('Codeforces Better! —— 正在优化折叠块渲染……');
+                        await delay(100);
+                        if (renderPerfOpt) await RenderPerfOpt();
+                    })
+                    .then(async () => {
+                        if (showLoading && standingsRecolor && is_cfStandings) newElement.html('Codeforces Better! —— 正在为榜单重新着色……');
+                        await delay(100);
+                        if (standingsRecolor && is_cfStandings) await recolorStandings();
+                    })
+                    .then(async () => {
+                        if (showLoading && is_problem) newElement.html('Codeforces Better! —— 正在添加代码编辑器……');
+                        await delay(100);
+                        if (is_problem && problemPageCodeEditor) await addProblemPageCodeEditor();
+                    })
+                    .then(async () => {
+                        await delay(100);
+                        if (showLoading && showClistRating_contest && is_contest) {
+                            newElement.html('Codeforces Better! —— 正在加载Clist数据……');
+                            await showRatingByClist_contest();
+                        }
+                        if (showLoading && showClistRating_problemset && is_problemset) {
+                            newElement.html('Codeforces Better! —— 正在加载Clist数据……');
+                            await showRatingByClist_problemset();
+                        }
+                        if (showLoading && showClistRating_problem && is_problem) {
+                            newElement.html('Codeforces Better! —— 正在加载Clist数据……');
+                            await showRatingByClist_problem();
+                        }
+                    })
+                    .then(() => {
+                        alertZh();
+                        if (showLoading) {
+                            newElement.html('Codeforces Better! —— 加载已完成');
+                            newElement.removeClass('alert-info').addClass('alert-success');
+                            setTimeout(function() {
+                                newElement.remove();
+                            }, 3000);
+                        }
+                    })
+                    .catch((error) => {
+                        console.warn(error);
+                    });
+            });
+        }
+
+        function delay(ms) {
+            return new Promise((resolve) => setTimeout(resolve, ms));
+        }
+
+        if (showLoading) {
+            if (is_mSite) $("header").after(newElement);
+            else $(".menu-box:first").next().after(newElement);
+        }
+
+        if (loaded) {
+            processPage();
+        } else {
+            // 页面完全加载完成后执行
+            window.onload = function() {
+                processPage();
+            };
+        }
+    }
+});
+
+// 配置自动迁移代码（将在10个小版本后移除-1.66）
+if (GM_getValue("openai_key") || GM_getValue("api2d_key")) {
+    const newConfig = { "choice": -1, "configurations": [] };
+    if (GM_getValue("openai_key")) {
+        let config1 = {
+            "note": "我的配置1",
+            "model": GM_getValue("openai_model") || "",
+            "key": GM_getValue("openai_key"),
+            "proxy": GM_getValue("openai_proxy") || "",
+            "_header": "",
+            "_data": ""
+        }
+        if (GM_getValue("translation") === "openai") newConfig.choice = 0;
+        newConfig.configurations.push(config1);
+    }
+    if (GM_getValue("api2d_key")) {
+        let config2 = {
+            "note": "api2d",
+            "model": GM_getValue("api2d_model"),
+            "key": GM_getValue("api2d_key"),
+            "proxy": GM_getValue("api2d_request_entry") + '/v1/chat/completions',
+            "_header": GM_getValue("x_api2d_no_cache") ? "" : " x-api2d-no-cache : 1",
+            "_data": ""
+        }
+        if (GM_getValue("translation") === "api2d") {
+            if (GM_getValue("openai_key")) newConfig.choice = 1;
+            else newConfig.choice = 0;
+        }
+        newConfig.configurations.push(config2);
+    }
+    GM_setValue("chatgpt-config", newConfig);
+    const keysToDelete = ["openai_key", "openai_model", "openai_proxy", "api2d_key", "api2d_model", "api2d_request_entry", "x_api2d_no_cache", "showOpneAiAdvanced"];
+    keysToDelete.forEach(key => {
+        if (GM_getValue(key) != undefined) GM_deleteValue(key);
+    });
+    if (GM_getValue("translation") === "api2d") GM_setValue("translation", "openai");
+    location.reload();
+}
+// 配置自动迁移代码（将在10个小版本后移除-1.71）
+if (GM_getValue("darkMode") === true || GM_getValue("darkMode") === false) {
+    GM_setValue("darkMode", "follow");
+    location.reload();
+}
