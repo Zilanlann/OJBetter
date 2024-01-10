@@ -1,0 +1,7 @@
+commands:
+  cpp:
+  - clangd
+  python:
+  - pylsp
+host: 127.0.0.1
+port: '2323'
