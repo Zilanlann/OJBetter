@@ -98,7 +98,7 @@ async function initVar() {
     is_submitPage = href.includes('/submit');
     is_cfStandings = href.includes('/standings') &&
         $('.standings tr:first th:nth-child(n+5)')
-            .map(function () {
+            .map(function() {
                 return $(this).find('span').text();
             })
             .get()
@@ -598,12 +598,12 @@ function handleColorSchemeChange(event) {
 function darkModeStyleAdjustment() {
     $(".test-example-line").off("mouseenter mouseleave"); // 移除上面原本的事件
     $('.test-example-line-odd').hover(
-        function () {
+        function() {
             $(this).addClass('darkhighlight');
             $(this).prevUntil(':not(.test-example-line-odd)').addClass('darkhighlight');
             $(this).nextUntil(':not(.test-example-line-odd)').addClass('darkhighlight');
         },
-        function () {
+        function() {
             $(this).removeClass('darkhighlight');
             $(this).prevUntil(':not(.test-example-line-odd)').removeClass('darkhighlight');
             $(this).nextUntil(':not(.test-example-line-odd)').removeClass('darkhighlight');
@@ -904,12 +904,14 @@ header .enter-or-register-box, header .languages {
     right: 170px;
 }
 button.ojb_btn.CFBetter_setting {
-    float: right;
-    height: 30px;
-    background: #60a5fa;
-    color: white;
-    margin: 10px;
-    border: 1px solid #60a5fa;
+    font-family: cuprum,sans-serif!important;
+    font-weight: 400;
+    text-align: center;
+    float: left;
+    list-style: none;
+    color: #000;
+    margin-right: 1.2em;
+    top: 5px;
 }
 
 button.ojb_btn.CFBetter_setting.open {
@@ -2300,7 +2302,7 @@ function debounce(callback) {
     let timer;
     let immediateExecuted = false;
     const delay = 500;
-    return function () {
+    return function() {
         clearTimeout(timer);
         if (!immediateExecuted) { callback.call(this); immediateExecuted = true; }
         timer = setTimeout(() => { immediateExecuted = false; }, delay);
@@ -2326,7 +2328,7 @@ function addDraggable(element) {
     let x, y, l, t, nl, nt;
     let isSpecialMouseDown = false; // 选取某些元素时不拖动
 
-    element.on('mousedown', function (e) {
+    element.on('mousedown', function(e) {
         isSpecialMouseDown = $(e.target).is('label, p, input, textarea, span, select');
         if (isSpecialMouseDown) return;
 
@@ -2417,13 +2419,13 @@ function createDialog(title, content, buttons, renderMarkdown = false) {
         dialog.append(buttonbox);
         $('body').before(dialog);
 
-        continueButton.click(function () {
+        continueButton.click(function() {
             $(styleElement).remove();
             dialog.remove();
             resolve(true);
         });
 
-        cancelButton.click(function () {
+        cancelButton.click(function() {
             $(styleElement).remove();
             dialog.remove();
             resolve(false);
@@ -2469,7 +2471,7 @@ function checkScriptVersion() {
         method: "GET",
         url: "https://greasyfork.org/zh-CN/scripts/465777.json",
         timeout: 10 * 1e3,
-        onload: function (response) {
+        onload: function(response) {
             const scriptData = JSON.parse(response.responseText);
             const skipUpdate = getCookie("skipUpdate");
 
@@ -2503,7 +2505,7 @@ function checkScriptVersion() {
                     </div>
                 `);
 
-                $("#skip_update").click(function () {
+                $("#skip_update").click(function() {
                     document.cookie = "skipUpdate=true; expires=session; path=/";
                     styleElement.remove();
                     $("#update_panel").remove();
@@ -2652,7 +2654,7 @@ async function localizeWebsite() {
     function traverseTextNodes($nodes, textReplaceRules) {
         if (!$nodes) return;
 
-        $nodes.each(function () {
+        $nodes.each(function() {
             let node = this;
             if (node.nodeType === Node.TEXT_NODE) {
                 Object.keys(textReplaceRules).forEach(match => {
@@ -2661,7 +2663,7 @@ async function localizeWebsite() {
                     node.textContent = node.textContent.replace(regex, replace);
                 });
             } else {
-                $(node).contents().each(function () {
+                $(node).contents().each(function() {
                     traverseTextNodes($(this), textReplaceRules);
                 });
             }
@@ -2676,7 +2678,7 @@ async function localizeWebsite() {
     function traverseValueNodes($nodes, valueReplaceRules) {
         if (!$nodes) return;
 
-        $nodes.each(function () {
+        $nodes.each(function() {
             let $node = $(this);
             if ($node.is('[value]')) {
                 Object.keys(valueReplaceRules).forEach(match => {
@@ -2687,7 +2689,7 @@ async function localizeWebsite() {
                     $node.val(newValue);
                 });
             } else {
-                $node.children().each(function () {
+                $node.children().each(function() {
                     traverseValueNodes($(this), valueReplaceRules);
                 });
             }
@@ -2702,7 +2704,7 @@ async function localizeWebsite() {
     function strictTraverseTextNodes($nodes, textReplaceRules) {
         if (!$nodes) return;
 
-        $nodes.each(function () {
+        $nodes.each(function() {
             let $node = $(this);
             if ($node.nodeType === Node.TEXT_NODE) {
                 const trimmedNodeText = $node.textContent.trim();
@@ -2712,7 +2714,7 @@ async function localizeWebsite() {
                     }
                 });
             } else {
-                $($node).contents().each(function () {
+                $($node).contents().each(function() {
                     strictTraverseTextNodes($(this), textReplaceRules);
                 });
             }
@@ -2754,14 +2756,14 @@ async function localizeWebsite() {
     });
 
     // 杂项
-    (function () {
+    (function() {
         // 选项汉化input[type="radio"]
         var translations = {
             "as individual participant": "个人",
             "as a team member": "作为一个团队成员",
         };
-        $('input[type="radio"]').each(function () {
-            var tag = $(this).parent().contents().filter(function () {
+        $('input[type="radio"]').each(function() {
+            var tag = $(this).parent().contents().filter(function() {
                 return this.nodeType === Node.TEXT_NODE;
             });
             for (var i = 0; i < tag.length; i++) {
@@ -2774,11 +2776,11 @@ async function localizeWebsite() {
             }
         });
     })();
-    (function () {
+    (function() {
         var translations = {
             "(standard input\/output)": "标准输入/输出",
         };
-        $("div.notice").each(function () {
+        $("div.notice").each(function() {
             var tag = $(this).children().eq(0).text();
             for (var property in translations) {
                 if (tag.match(property)) {
@@ -2794,13 +2796,13 @@ async function localizeWebsite() {
         traverseTextNodes($('nav'), commonReplacements['.second-level-menu']['rules']);
     }
     if (is_mSite) {
-        (function () {
+        (function() {
             var translations = {
                 "Announcements": "公告",
                 "Submissions": "提交记录",
                 "Contests": "比赛",
             };
-            $(".caption").each(function () {
+            $(".caption").each(function() {
                 var optionValue = $(this).text();
                 if (translations[optionValue]) {
                     $(this).text(translations[optionValue]);
@@ -3970,14 +3972,27 @@ const CompletConfigEditHTML = `
  */
 async function settingPanel() {
     // 添加右上角设置按钮
-    function insertCFBetterSettingButton(location, method) {
-        $(location)[method](`<button class='ojb_btn CFBetter_setting'>
-        Codeforces Better ${i18next.t('settings', { ns: 'common' })}</button>`);
-    }
+    // function insertCFBetterSettingButton(location, method) {
+    //     $(location)[method](`<button class='ojb_btn CFBetter_setting'>
+    //     Codeforces Better ${i18next.t('settings', { ns: 'common' })}</button>`);
+    // }
+    //
+    // insertCFBetterSettingButton(".lang-chooser", "before");
+    // insertCFBetterSettingButton(".enter-or-register-box", "after");
+    // if (is_completeProblemset) insertCFBetterSettingButton(".lang", "before");
 
-    insertCFBetterSettingButton(".lang-chooser", "before");
-    insertCFBetterSettingButton(".enter-or-register-box", "after");
-    if (is_completeProblemset) insertCFBetterSettingButton(".lang", "before");
+    // 遍历每个class为'menu-list-container'的div元素
+    $("div[class='menu-list-container']").each(function() {
+        // 在当前div中找到满足条件的form元素
+        const form = $(this).find("form[method='post'][action='/search']");
+        // 如果找到了form，执行插入操作
+        if (form.length > 0) {
+            // 创建按钮元素
+            const button = $(`<button class='ojb_btn CFBetter_setting'>Codeforces Better ${i18next.t('settings', { ns: 'common' })}</button>`);
+            // 将按钮插入到form之前
+            form.before(button);
+        }
+    });
 
     const $settingBtns = $(".CFBetter_setting");
     $settingBtns.click(() => {
@@ -3991,7 +4006,7 @@ async function settingPanel() {
         addDraggable($('#CFBetter_setting_menu'));
 
         // help浮窗位置更新
-        $('.help-icon').hover(function (event) {
+        $('.help-icon').hover(function(event) {
             var menuOffset = $('#CFBetter_setting_menu').offset();
             var mouseX = event.pageX - menuOffset.left;
             var mouseY = event.pageY - menuOffset.top;
@@ -4003,7 +4018,7 @@ async function settingPanel() {
         });
 
         // 选项卡切换
-        $('.CFBetter_setting_sidebar a').click(function (event) {
+        $('.CFBetter_setting_sidebar a').click(function(event) {
             event.preventDefault();
             $('.CFBetter_setting_sidebar a').removeClass('active');
             $(this).addClass('active');
@@ -4071,7 +4086,7 @@ async function settingPanel() {
         $("#autoTranslation").prop("checked", GM_getValue("autoTranslation") === true);
         $('#shortTextLength').val(GM_getValue("shortTextLength"));
         $("#allowMixTrans").prop("checked", GM_getValue("allowMixTrans") === true);
-        $('.CFBetter_checkboxs').find('input[type="checkbox"][name="mixedTranslation"]').each(function () {
+        $('.CFBetter_checkboxs').find('input[type="checkbox"][name="mixedTranslation"]').each(function() {
             if (mixedTranslation.indexOf($(this).val()) > -1) {
                 $(this).prop('checked', true);
             }
@@ -4117,7 +4132,7 @@ async function settingPanel() {
                 allowMixTrans: $("#allowMixTrans").prop("checked"),
                 mixedTranslation: (() => {
                     let mixedTranslation = [];
-                    $('.CFBetter_checkboxs').find('input[type="checkbox"][name="mixedTranslation"]').each(function () {
+                    $('.CFBetter_checkboxs').find('input[type="checkbox"][name="mixedTranslation"]').each(function() {
                         if ($(this).is(":checked")) {
                             mixedTranslation.push($(this).val());
                         }
@@ -4278,32 +4293,32 @@ turndownService.keep(['del']);
 
 // 丢弃
 turndownService.addRule('remove-by-class', {
-    filter: function (node) {
+    filter: function(node) {
         return node.classList.contains('sample-tests') ||
             node.classList.contains('header') ||
             node.classList.contains('overlay') ||
             node.classList.contains('html2md-panel') ||
             node.classList.contains('likeForm');
     },
-    replacement: function (content, node) {
+    replacement: function(content, node) {
         return "";
     }
 });
 turndownService.addRule('remove-script', {
-    filter: function (node, options) {
+    filter: function(node, options) {
         return node.tagName.toLowerCase() == "script" && node.type.startsWith("math/tex");
     },
-    replacement: function (content, node) {
+    replacement: function(content, node) {
         return "";
     }
 });
 
 // inline math
 turndownService.addRule('inline-math', {
-    filter: function (node, options) {
+    filter: function(node, options) {
         return node.tagName.toLowerCase() == "span" && node.className == "MathJax";
     },
-    replacement: function (content, node) {
+    replacement: function(content, node) {
         var latex = $(node).next().text();
         latex = latex.replace(/</g, "&lt;").replace(/>/g, "&gt;");
         return "$" + latex + "$";
@@ -4312,10 +4327,10 @@ turndownService.addRule('inline-math', {
 
 // block math
 turndownService.addRule('block-math', {
-    filter: function (node, options) {
+    filter: function(node, options) {
         return node.tagName.toLowerCase() == "div" && node.className == "MathJax_Display";
     },
-    replacement: function (content, node) {
+    replacement: function(content, node) {
         var latex = $(node).next().text();
         latex = latex.replace(/</g, "&lt;").replace(/>/g, "&gt;");
         return "\n$$\n" + latex + "\n$$\n";
@@ -4324,26 +4339,26 @@ turndownService.addRule('block-math', {
 
 // texFontStyle
 turndownService.addRule('texFontStyle', {
-    filter: function (node) {
+    filter: function(node) {
         return (
             node.nodeName === 'SPAN' &&
             node.classList.contains('tex-font-style-bf')
         )
     },
-    replacement: function (content) {
+    replacement: function(content) {
         return '**' + content + '**'
     }
 })
 
 // sectionTitle
 turndownService.addRule('sectionTitle', {
-    filter: function (node) {
+    filter: function(node) {
         return (
             node.nodeName === 'DIV' &&
             node.classList.contains('section-title')
         )
     },
-    replacement: function (content) {
+    replacement: function(content) {
         return '**' + content + '**'
     }
 })
@@ -4351,7 +4366,7 @@ turndownService.addRule('sectionTitle', {
 // bordertable
 turndownService.addRule('bordertable', {
     filter: 'table',
-    replacement: function (content, node) {
+    replacement: function(content, node) {
         if (node.classList.contains('bordertable')) {
             var output = [],
                 thead = '',
@@ -4364,7 +4379,7 @@ turndownService.addRule('bordertable', {
                 }
             }
             var rows = node.querySelectorAll('tr');
-            Array.from(rows).forEach(function (row, i) {
+            Array.from(rows).forEach(function(row, i) {
                 if (i > 0) {
                     var cells = row.querySelectorAll('td,th');
                     var trow = '| ' + Array.from(cells).map(cell => turndownService.turndown(cell.innerHTML.trim())).join(' | ') + ' |';
@@ -4445,7 +4460,7 @@ class TaskQueue {
  */
 async function initButtonFunc() {
     // 鼠标悬浮时为目标元素区域添加一个覆盖层
-    $.fn.addHoverOverlay = function (target) {
+    $.fn.addHoverOverlay = function(target) {
         let position = $(target).css('position');
         let display = $(target).css('display');
 
@@ -4470,7 +4485,7 @@ async function initButtonFunc() {
      * 获取MarkDown
      * @returns {string} MarkDown
      */
-    $.fn.getMarkdown = function () {
+    $.fn.getMarkdown = function() {
         if (this.attr("markdown")) {
             return this.attr("markdown");
         } else {
@@ -4481,7 +4496,7 @@ async function initButtonFunc() {
     }
 
     // 设置翻译按钮状态
-    $.fn.setTransButtonState = function (state, text = null) {
+    $.fn.setTransButtonState = function(state, text = null) {
         if (state === 'normal') {
             this
                 .text(text ? text : i18next.t('trans.normal', { ns: 'button' }))
@@ -4513,7 +4528,7 @@ async function initButtonFunc() {
     }
 
     // 获取翻译按钮状态
-    $.fn.getTransButtonState = function () {
+    $.fn.getTransButtonState = function() {
         if (this.hasClass('translating')) {
             return 'translating';
         } else if (this.hasClass('translated')) {
@@ -4526,7 +4541,7 @@ async function initButtonFunc() {
     }
 
     // 存翻译结果
-    $.fn.pushResultToTransButton = function (result) {
+    $.fn.pushResultToTransButton = function(result) {
         let resultStack = this.data('resultStack');
         if (!resultStack) resultStack = [];
         resultStack.push(result);
@@ -4534,32 +4549,32 @@ async function initButtonFunc() {
     }
 
     // 获取翻译结果
-    $.fn.getResultFromTransButton = function () {
+    $.fn.getResultFromTransButton = function() {
         return this.data('resultStack');
     }
 
     // 标记是否为短文本
-    $.fn.setIsShortText = function () {
+    $.fn.setIsShortText = function() {
         this.data('isShortText', true);
     }
 
     // 获取是否为短文本
-    $.fn.IsShortText = function () {
+    $.fn.IsShortText = function() {
         return this.data('isShortText');
     }
 
     // 标记为不自动翻译
-    $.fn.setNotAutoTranslate = function () {
+    $.fn.setNotAutoTranslate = function() {
         this.data('notAutoTranslate', true);
     }
 
     // 获取是否为不自动翻译
-    $.fn.getNotAutoTranslate = function () {
+    $.fn.getNotAutoTranslate = function() {
         return this.data('notAutoTranslate');
     }
 
     // 判断是否已经翻译
-    $.fn.IsTranslated = function () {
+    $.fn.IsTranslated = function() {
         if (this.hasAttr('translated')) {
             return true;
         } else {
@@ -4568,7 +4583,7 @@ async function initButtonFunc() {
     }
 
     // 判断是否为评论区按钮
-    $.fn.IsCommentButton = function () {
+    $.fn.IsCommentButton = function() {
         let isCommentButton = this.data('isCommentButton');
         if (isCommentButton == undefined) {
             this.parents('.comments').length > 0 ? isCommentButton = true : isCommentButton = false;
@@ -4627,7 +4642,7 @@ async function addButtonWithHTML2MD(button, element, suffix, type) {
         button.text(i18next.t('md.normal', { ns: 'button' }));
     }
 
-    button.click(debounce(function () {
+    button.click(debounce(function() {
         var target = $(element).get(0);
 
         /**
@@ -4692,7 +4707,7 @@ async function addButtonWithCopy(button, element, suffix, type) {
         button.prop("disabled", false);
     }
 
-    button.click(debounce(function () {
+    button.click(debounce(function() {
         var target = $(element).get(0);
 
         var markdown = $(element).getMarkdown();
@@ -4735,7 +4750,7 @@ async function addButtonWithTranslation(button, element, suffix, type, is_commen
         // button.after(`<span>${length}</span>`); // 显示字符数
     }
 
-    button.click(debounce(async function () {
+    button.click(debounce(async function() {
         // 重新翻译
         let resultStack = $(this).getResultFromTransButton();
         if (resultStack) {
@@ -4764,7 +4779,7 @@ async function addButtonWithTranslation(button, element, suffix, type, is_commen
     }));
 
     // 添加可指定翻译服务的方法调用
-    button.data("translatedItBy", function (translation) {
+    button.data("translatedItBy", function(translation) {
         button.setTransButtonState('translating', i18next.t('trans.wait', { ns: 'button' }));
         taskQueue.addTask(translation, () => transTask(button, element, type, is_comment, translation), translation == 'openai');
     });
@@ -4790,7 +4805,7 @@ async function addButtonWithTranslation(button, element, suffix, type, is_commen
     }
 
     // 右键菜单
-    $(document).on('contextmenu', '#translateButton' + suffix, function (e) {
+    $(document).on('contextmenu', '#translateButton' + suffix, function(e) {
         e.preventDefault();
 
         // 是否为评论的翻译
@@ -4814,7 +4829,7 @@ async function addButtonWithTranslation(button, element, suffix, type, is_commen
             var label = $('<label><input type="radio" name="translation" value="0"><span class="CFBetter_contextmenu_label_text">跟随首选项</span></label>');
             menu.append(label);
         }
-        translations.forEach(function (translation) {
+        translations.forEach(function(translation) {
             var label = $(`<label><input type="radio" name="translation" value="${translation.value}">
             <span class="CFBetter_contextmenu_label_text">${translation.name}</span></label>`);
             menu.append(label);
@@ -4831,7 +4846,7 @@ async function addButtonWithTranslation(button, element, suffix, type, is_commen
             left: e.pageX + 'px'
         }).appendTo('body');
 
-        $(document).one('change', 'input[name="translation"]', function () {
+        $(document).one('change', 'input[name="translation"]', function() {
             if (is_comment) {
                 commentTranslationChoice = $('input[name="translation"]:checked').val();
                 GM_setValue("commentTranslationChoice", commentTranslationChoice);
@@ -4974,7 +4989,7 @@ async function multiChoiceTranslation() {
         }
     `);
 
-    $(document).on('click', 'p, li:not(:has(.comment)), .CFBetter_acmsguru', function (e) {
+    $(document).on('click', 'p, li:not(:has(.comment)), .CFBetter_acmsguru', function(e) {
         let $this = $(this);
         e.stopPropagation();
         if ($this.hasClass('block_selected')) {
@@ -4992,7 +5007,7 @@ async function multiChoiceTranslation() {
                 });
             $this.before(menu);
 
-            $("#translateButton_selected_" + id).click(async function () {
+            $("#translateButton_selected_" + id).click(async function() {
                 // 处理旧的结果
                 if ($this.attr('translated')) {
                     let result = $this.data("resultData");
@@ -5038,7 +5053,7 @@ async function acmsguruReblock() {
     }
     else {
         // 分段/选段模式下的划分方式
-        $('.ttypography').children().each(function () {
+        $('.ttypography').children().each(function() {
             var html = $(this).html();
             var replacedHtml = html.replace(/(?:<\/div>|<br><br>)(?<text>[\s\S]+?)(?=<br><br>)/g,
                 '<div align="left" class="CFBetter_acmsguru" >$<text></div>');
@@ -5067,7 +5082,7 @@ async function addConversionButton() {
         });
     }
     // 添加按钮到ttypography部分
-    $(".ttypography").each(function () {
+    $(".ttypography").each(function() {
         // 是否为评论
         let is_comment = false;
         if ($(this).parents('.comments').length > 0) is_comment = true;
@@ -5084,8 +5099,8 @@ async function addConversionButton() {
     // 完整题目集页特殊处理
     if (is_completeProblemset) {
         let exContentsPageClasses = ["sample-tests"];
-        $('.problem-statement').each(function () {
-            $(this).children('div').each(function (i, e) {
+        $('.problem-statement').each(function() {
+            $(this).children('div').each(function(i, e) {
                 var className = $(e).attr('class');
                 if (!exContentsPageClasses.includes(className)) {
                     var id = "_problem_" + getRandomNumber(8);
@@ -5100,7 +5115,7 @@ async function addConversionButton() {
     }
 
     // 添加按钮到spoiler部分
-    $('.spoiler-content').each(function () {
+    $('.spoiler-content').each(function() {
         if ($(this).find('.html2md-panel').length === 0) {
             let id = "_spoiler_" + getRandomNumber(8);
             let panel = addButtonPanel(this, id, "child_level");
@@ -5111,10 +5126,10 @@ async function addConversionButton() {
     });
 
     // 添加按钮到titled部分
-    (function () {
+    (function() {
         var elements = [".Virtual.participation", ".Attention", ".Practice"];//只为部分titled添加
         $.each(elements, (i, e) => {
-            $(e).each(function () {
+            $(e).each(function() {
                 let id = "_titled_" + getRandomNumber(8);
                 let nextDiv = $(this).next().children().get(0);
                 if (!nextDiv) return;
@@ -5124,7 +5139,7 @@ async function addConversionButton() {
         });
     })();
     if (is_mSite) {
-        $("div[class='_IndexPage_notice']").each(function () {
+        $("div[class='_IndexPage_notice']").each(function() {
             let id = "_titled_" + getRandomNumber(8);
             let panel = addButtonPanel(this, id, "this_level", true);
             addButtonWithTranslation(panel.translateButton, this, id, "this_level");
@@ -5132,13 +5147,13 @@ async function addConversionButton() {
     }
 
     // 添加按钮到比赛QA部分
-    $(".question-response").each(function () {
+    $(".question-response").each(function() {
         let id = "_question_" + getRandomNumber(8);
         let panel = addButtonPanel(this, id, "this_level", true);
         addButtonWithTranslation(panel.translateButton, this, id, "this_level");
     });
     if (is_mSite) {
-        $("div._ProblemsPage_announcements table tbody tr:gt(0)").each(function () {
+        $("div._ProblemsPage_announcements table tbody tr:gt(0)").each(function() {
             var $nextDiv = $(this).find("td:first");
             let id = "_question_" + getRandomNumber(8);
             let panel = addButtonPanel($nextDiv, id, "this_level", true);
@@ -5147,7 +5162,7 @@ async function addConversionButton() {
     }
 
     // 添加按钮到弹窗confirm-proto部分
-    $(".confirm-proto").each(function () {
+    $(".confirm-proto").each(function() {
         let id = "_titled_" + getRandomNumber(8);
         var $nextDiv = $(this).children().get(0);
         let panel = addButtonPanel($nextDiv, id, "this_level", true);
@@ -5155,14 +5170,14 @@ async function addConversionButton() {
     });
 
     // 添加按钮到_CatalogHistorySidebarFrame_item部分
-    $("._CatalogHistorySidebarFrame_item").each(function () {
+    $("._CatalogHistorySidebarFrame_item").each(function() {
         let id = "_history_sidebar_" + getRandomNumber(8);
         let panel = addButtonPanel(this, id, "this_level", true);
         addButtonWithTranslation(panel.translateButton, this, id, "this_level");
     });
 
-    $(".problem-lock-link").on("click", function () {
-        $(".popup .content div").each(function () {
+    $(".problem-lock-link").on("click", function() {
+        $(".popup .content div").each(function() {
             let id = "_popup_" + getRandomNumber(8);
             let panel = addButtonPanel(this, id, "this_level", true);
             addButtonWithTranslation(panel.translateButton, this, id, "this_level");
@@ -5170,14 +5185,14 @@ async function addConversionButton() {
     });
 
     // 添加按钮到弹窗alert部分
-    $(".alert:not(.CFBetter_alert)").each(function () {
+    $(".alert:not(.CFBetter_alert)").each(function() {
         let id = "_alert_" + getRandomNumber(8);
         let panel = addButtonPanel(this, id, "this_level", true);
         addButtonWithTranslation(panel.translateButton, this, id, "this_level");
     });
 
     // 添加按钮到talk-text部分
-    $(".talk-text").each(function () {
+    $(".talk-text").each(function() {
         let id = "_talk-text_" + getRandomNumber(8);
         let panel = addButtonPanel(this, id, "child_level", true);
         addButtonWithTranslation(panel.translateButton, this, id, "child_level");
@@ -5229,7 +5244,7 @@ function recoverBlock(translatedText, matches, replacements) {
         let latexMatch = '(?<latex_block>\\$\\$(\\\\.|[^\\$])*?\\$\\$)|(?<latex_inline>\\$(\\\\.|[^\\$])*?\\$)|';
 
         let regex = new RegExp(latexMatch + `【\\s*${i + 1}\\s*】|\\[\\s*${i + 1}\\s*\\]|{\\s*${i + 1}\\s*}`, 'g');
-        translatedText = translatedText.replace(regex, function (match, ...args) {
+        translatedText = translatedText.replace(regex, function(match, ...args) {
             // LaTeX中的不替换
             const groups = args[args.length - 1]; // groups是replace方法的最后一个参数
             if (groups.latex_block || groups.latex_inline) return match;
@@ -5242,7 +5257,7 @@ function recoverBlock(translatedText, matches, replacements) {
         });
 
         regex = new RegExp(latexMatch + `【\\s*${i + 1}(?![】\\d])|(?<![【\\d])${i + 1}\\s*】|\\[\\s*${i + 1}(?![\\]\\d])|(?<![\\[\\d])${i + 1}\\s*\\]|{\\s*${i + 1}(?![}\\d])|(?<![{\\d])${i + 1}\\s*}`, 'g');
-        translatedText = translatedText.replace(regex, function (match, ...args) {
+        translatedText = translatedText.replace(regex, function(match, ...args) {
             // LaTeX中的不替换
             const groups = args[args.length - 1];
             if (groups.latex_block || groups.latex_inline) return match;
@@ -6034,7 +6049,7 @@ function CommentPagination() {
         displayedIndexes = [];
 
         // 显示当前页
-        elements.slice(start, end).each(function (index) {
+        elements.slice(start, end).each(function(index) {
             $(this).show();
             displayedIndexes.push(start + index);
         });
@@ -6058,8 +6073,8 @@ function CommentPagination() {
         var startIndex = pageURL.lastIndexOf("#comment-") + 9;
         commentID = pageURL.substring(startIndex);
         var indexInComments = null;
-        $(".comments > .comment").each(function (index) {
-            $(this).find(".comment-table").each(function () {
+        $(".comments > .comment").each(function(index) {
+            $(this).find(".comment-table").each(function() {
                 var tableCommentID = $(this).attr("commentid");
                 if (tableCommentID === commentID) {
                     indexInComments = index;
@@ -6070,14 +6085,14 @@ function CommentPagination() {
         let page = Math.ceil((indexInComments + 1) / batchSize);
         currentPage = !page ? 1 : page;
         showBatch((currentPage - 1) * batchSize, currentPage * batchSize);
-        setTimeout(function () {
+        setTimeout(function() {
             window.location.href = pageURL;
         }, 1000);
     } else {
         showBatch(0, batchSize);
     }
 
-    $("#prev-page-btn").on("click", function () {
+    $("#prev-page-btn").on("click", function() {
         var itemsPerPage = parseInt($("#items-per-page").val());
         start = (currentPage - 2) * itemsPerPage;
         end = (currentPage - 1) * itemsPerPage;
@@ -6085,7 +6100,7 @@ function CommentPagination() {
         showBatch(start, end);
     });
 
-    $("#next-page-btn").on("click", function () {
+    $("#next-page-btn").on("click", function() {
         var itemsPerPage = parseInt($("#items-per-page").val());
         start = currentPage * itemsPerPage;
         end = (currentPage + 1) * itemsPerPage;
@@ -6093,7 +6108,7 @@ function CommentPagination() {
         showBatch(start, end);
     });
 
-    $("#jump-btn").on("click", function () {
+    $("#jump-btn").on("click", function() {
         var inputPage = parseInt($("#jump-input").val());
 
         if (inputPage >= 1 && inputPage <= Math.ceil(elements.length / parseInt($("#items-per-page").val()))) {
@@ -6105,7 +6120,7 @@ function CommentPagination() {
         }
     });
 
-    $("#items-per-page").on("change", function () {
+    $("#items-per-page").on("change", function() {
         batchSize = parseInt($(this).val());
         let page = Math.ceil(end / batchSize);
         currentPage = !page ? 1 : page;
@@ -6387,16 +6402,16 @@ async function getRating(problem, problem_url, contest = null) {
             method: 'GET',
             url: `https://clist.by/problems/?${queryString}`,
             responseType: 'html',
-            onload: function (response) {
+            onload: function(response) {
                 const html = response.responseText;
                 var cleanedHtml = html.replace(/src=(.|\s)*?"/g, '');
                 const trs = $(cleanedHtml).find('table').find('tbody tr');
                 let records = [];
-                trs.each(function (index) {
+                trs.each(function(index) {
                     const rating = $(this).find('.problem-rating-column').text().trim();
                     const link = $(this).find('.problem-name-column').find('a').eq(1).attr('href');
                     var contests = [];
-                    $(this).find('.problem-name-column').find('.pull-right a[title], .pull-right span[title]').each(function () {
+                    $(this).find('.problem-name-column').find('.pull-right a[title], .pull-right span[title]').each(function() {
                         var value = $(this).attr('title');
                         if (value) {
                             value = value.replace(/<br\/?><\/a>/g, '');
@@ -6428,7 +6443,7 @@ async function getRating(problem, problem_url, contest = null) {
                 }
                 reject('\n' + problem + '未找到该题目的数据\n');
             },
-            onerror: function (response) {
+            onerror: function(response) {
                 reject(problem + '发生了错误！');
             }
         });
@@ -6443,7 +6458,7 @@ async function getRatingFromApi_problem(problem, problem_url) {
             headers: {
                 "Authorization": clist_Authorization
             },
-            onload: function (response) {
+            onload: function(response) {
                 if (!response) reject('发生了未知错误！');
                 let data = JSON.parse(response.responseText);
                 let objects = data.objects;
@@ -6552,7 +6567,7 @@ async function showRatingByClist_contest() {
     // 创建Rating显示框
     creatRatingCss();
     let ratingBadges = {};
-    $('.datatable .id.left').each(function () {
+    $('.datatable .id.left').each(function() {
         let href = 'https://codeforces.com' + $(this).find('a').attr('href');
         let badge = $(`<a class="ratingBadge">${i18next.t('state.wait', { ns: 'button' })}</a>`);
         $(this).find('a').after(badge);
@@ -6659,13 +6674,13 @@ async function recolorStandings() {
         return scale(value).hex();
     }
     var maxScores = $('.standings tr:first th:nth-child(n+5)')
-        .map(function () {
+        .map(function() {
             return $(this).find('span').text();
         })
         .get();
-    $('.standings tr:not(:first):not(:last)').each(function () {
+    $('.standings tr:not(:first):not(:last)').each(function() {
         var thElements = $(this).find('td:nth-child(n+5)');
-        thElements.each(function (index) {
+        thElements.each(function(index) {
             var spanElement = $(this).find('span:first');
             var value = parseInt(spanElement.text());
             if (value <= 0 || /[a-zA-Z]/.test(maxScores[index])) return;
@@ -6691,13 +6706,13 @@ async function CloneOriginalHTML(submitUrl, cacheKey) {
             method: 'GET',
             url: submitUrl,
             responseType: 'html',
-            onload: function (response) {
+            onload: function(response) {
                 const html = response.responseText;
                 const cloneHTML = $(html);
                 localStorage.setItem(cacheKey, html);
                 resolve(cloneHTML);
             },
-            onerror: function (response) {
+            onerror: function(response) {
                 reject('网络错误');
             }
         });
@@ -6929,7 +6944,7 @@ async function createMonacoEditor(language, form, support) {
      * 一些工具函数
      */
     // 将lsp格式的rang转换为Monaco格式
-    CFBetter_monaco.lspRangeToMonacoRange = function (range) {
+    CFBetter_monaco.lspRangeToMonacoRange = function(range) {
         const { start, end } = range;
         return new monaco.Range(
             start.line + 1,
@@ -6939,7 +6954,7 @@ async function createMonacoEditor(language, form, support) {
         );
     };
     // 将Monaco格式的rang转为lsp格式
-    CFBetter_monaco.MonacoRangeTolspRange = function (range) {
+    CFBetter_monaco.MonacoRangeTolspRange = function(range) {
         return {
             start: {
                 line: range.startLineNumber - 1,
@@ -6952,14 +6967,14 @@ async function createMonacoEditor(language, form, support) {
         };
     };
     // 将Monaco格式的position转为lsp格式的
-    CFBetter_monaco.MonacoPositionTolspPosition = function (position) {
+    CFBetter_monaco.MonacoPositionTolspPosition = function(position) {
         return {
             line: position.lineNumber - 1,
             character: position.column - 1,
         };
     };
     // 将Monaco格式的severity转为lsp格式的
-    CFBetter_monaco.MonacoSeverityTolspSeverity = function (severity) {
+    CFBetter_monaco.MonacoSeverityTolspSeverity = function(severity) {
         switch (severity) {
             case 8:
                 return 1;
@@ -6974,7 +6989,7 @@ async function createMonacoEditor(language, form, support) {
         }
     };
     // 将lsp格式的severity转为Monaco格式的
-    CFBetter_monaco.lspSeverityToMonacoSeverity = function (severity) {
+    CFBetter_monaco.lspSeverityToMonacoSeverity = function(severity) {
         switch (severity) {
             case 1:
                 return 8;
@@ -6989,7 +7004,7 @@ async function createMonacoEditor(language, form, support) {
         }
     };
     // 收集Monaco数据中的rang数据
-    CFBetter_monaco.CollectRange = function (item) {
+    CFBetter_monaco.CollectRange = function(item) {
         return {
             startLineNumber: item.startLineNumber,
             startColumn: item.startColumn,
@@ -6998,7 +7013,7 @@ async function createMonacoEditor(language, form, support) {
         };
     };
     // 收集Monaco position数据中的rang数据
-    CFBetter_monaco.CollectRangeByPosition = function (item) {
+    CFBetter_monaco.CollectRangeByPosition = function(item) {
         var word = model.getWordUntilPosition(item);
         return {
             startLineNumber: item.lineNumber,
@@ -7008,7 +7023,7 @@ async function createMonacoEditor(language, form, support) {
         };
     };
     // 将lsp格式的Edit转换为Monaco格式
-    CFBetter_monaco.lspEditToMonacoEdit = function (edit) {
+    CFBetter_monaco.lspEditToMonacoEdit = function(edit) {
         const edits = [];
 
         if (language == "python") {
@@ -7101,7 +7116,7 @@ async function createMonacoEditor(language, form, support) {
         var changeSize = $(`<div><label for="fontSizeInput">${i18next.t('fontSizeInput', { ns: 'codeEditor' })}</label>
         <input type="number" id="fontSizeInput" value="${editorFontSize}"></div>`)
         form.topRightDiv.append(changeSize);
-        changeSize.find('input#fontSizeInput').on('input', function () {
+        changeSize.find('input#fontSizeInput').on('input', function() {
             var size = $(this).val();
             editor.updateOptions({ fontSize: parseInt(size) });
             GM_setValue('editorFontSize', size);
@@ -7330,13 +7345,13 @@ async function createMonacoEditor(language, form, support) {
         function registMyCompletionItemProvider(language, genre, rule) {
             if (genre == "monaco") {
                 monaco.languages.registerCompletionItemProvider(language, {
-                    provideCompletionItems: function (model, position) {
+                    provideCompletionItems: function(model, position) {
                         return parseMonacoCompleter(rule, CFBetter_monaco.CollectRangeByPosition(position));
                     }
                 })
             } else if (genre == "ace") {
                 monaco.languages.registerCompletionItemProvider(language, {
-                    provideCompletionItems: function (model, position) {
+                    provideCompletionItems: function(model, position) {
                         return parseAceCompleter(rule, CFBetter_monaco.CollectRangeByPosition(position));
                     }
                 })
@@ -7382,7 +7397,7 @@ async function createMonacoEditor(language, form, support) {
     var LSPLogList = $('<ul></ul>');
     $('#LSPLogList').append(LSPLogList);
     var closeButton = LSPLog.find('button');
-    closeButton.on('click', function () {
+    closeButton.on('click', function() {
         LSPLog.hide();
         $(styleElement).remove();
     });
@@ -7786,7 +7801,7 @@ async function createMonacoEditor(language, form, support) {
         languageSocket.send(JSON.stringify(initializeRequest));
 
         // 打开文档函数
-        CFBetter_monaco.openDocRequest = function () {
+        CFBetter_monaco.openDocRequest = function() {
             const initializ = {
                 jsonrpc: "2.0",
                 method: "initialized",
@@ -8485,7 +8500,7 @@ async function createMonacoEditor(language, form, support) {
     CFBetter_monaco.PassiveReceiveHandler = () => {
 
         // "实时代码诊断"
-        CFBetter_monaco.updateMarkers = function (message) {
+        CFBetter_monaco.updateMarkers = function(message) {
             const params = message.params;
             pushLSPLogMessage("info", `Markers 当前收到的数据↓`, message);
 
@@ -8525,7 +8540,7 @@ async function createMonacoEditor(language, form, support) {
         };
 
         // "应用服务器推送的更改"(代码修复)
-        CFBetter_monaco.applyEdit = function (message) {
+        CFBetter_monaco.applyEdit = function(message) {
             const params = message.params;
             pushLSPLogMessage("info", `applyEdit 当前收到的数据↓`, message);
 
@@ -8595,10 +8610,10 @@ function collectTestData() {
         return text;
     }
 
-    $('.input').each(function (index) {
+    $('.input').each(function(index) {
         var inputText = '';
         if ($(this).find('pre').find('div').length > 0) {
-            $(this).find('pre').find('div').each(function () {
+            $(this).find('pre').find('div').each(function() {
                 inputText += getTextFromPre($(this)) + '\n';
             });
         } else {
@@ -8606,7 +8621,7 @@ function collectTestData() {
         }
         var outputText = '';
         if ($('.output').eq(index).find('pre').find('div').length > 0) {
-            $('.output').eq(index).find('pre').find('div').each(function () {
+            $('.output').eq(index).find('pre').find('div').each(function() {
                 inputText += getTextFromPre($(this)) + '\n';
             });
         } else {
@@ -8628,7 +8643,7 @@ function CustomTestInit() {
     restoreText();
 
     // 添加
-    $('#addCustomTest').click(function () {
+    $('#addCustomTest').click(function() {
         var sampleDiv = $('<div class="sampleDiv">');
         var inputTextarea = $('<p style="padding: 0px 5px;">input</p><textarea class="dynamicTextarea inputTextarea"></textarea>');
         var outputTextarea = $('<p style="padding: 0px 5px;">output</p><textarea class="dynamicTextarea outputTextarea"></textarea>');
@@ -8640,15 +8655,15 @@ function CustomTestInit() {
     });
 
     // 实时保存文本内容到 IndexedDB 中
-    $(document).on('input', '.inputTextarea, .outputTextarea', function () {
-        CFBetterDB.transaction('rw', CFBetterDB.samplesData, function () {
+    $(document).on('input', '.inputTextarea, .outputTextarea', function() {
+        CFBetterDB.transaction('rw', CFBetterDB.samplesData, function() {
             var objectStore = CFBetterDB.samplesData;
             var samples = {
                 url: url,
                 samples: []
             };
             var index = 0;
-            $('.sampleDiv').each(function () {
+            $('.sampleDiv').each(function() {
                 var $sampleDiv = $(this);
                 var inputTextarea = $sampleDiv.find('.inputTextarea');
                 var outputTextarea = $sampleDiv.find('.outputTextarea');
@@ -8668,9 +8683,9 @@ function CustomTestInit() {
     });
 
     // 删除
-    $(document).on('click', '.deleteCustomTest', function () {
+    $(document).on('click', '.deleteCustomTest', function() {
         var $sampleDiv = $(this).closest('.sampleDiv');
-        CFBetterDB.transaction('rw', CFBetterDB.samplesData, function () {
+        CFBetterDB.transaction('rw', CFBetterDB.samplesData, function() {
             var objectStore = CFBetterDB.samplesData;
             var index = parseInt($sampleDiv.attr('data-index'));
             if (!isNaN(index)) {
@@ -8689,11 +8704,11 @@ function CustomTestInit() {
 
     // 恢复保存的内容
     function restoreText() {
-        CFBetterDB.transaction('r', CFBetterDB.samplesData, function () {
+        CFBetterDB.transaction('r', CFBetterDB.samplesData, function() {
             return CFBetterDB.samplesData.get(url);
-        }).then(function (data) {
+        }).then(function(data) {
             if (data.samples && data.samples.length > 0) {
-                data.samples.forEach(function (item, index) {
+                data.samples.forEach(function(item, index) {
                     var sampleDiv = $('<div class="sampleDiv">');
                     var inputTextarea = $(`<p style="padding: 0px 5px;">input</p><textarea id="input${index}" class="dynamicTextarea inputTextarea"></textarea>`);
                     var outputTextarea = $(`<p style="padding: 0px 5px;">output</p><textarea id="output${index}" class="dynamicTextarea outputTextarea"></textarea>`);
@@ -8717,14 +8732,14 @@ function CustomTestInit() {
 function getCustomTestData() {
     const url = window.location.href;
 
-    return new Promise(function (resolve) {
+    return new Promise(function(resolve) {
         var customTestData = {};
-        CFBetterDB.transaction('r', CFBetterDB.samplesData, function () {
+        CFBetterDB.transaction('r', CFBetterDB.samplesData, function() {
             return CFBetterDB.samplesData.get(url);
-        }).then(function (data) {
+        }).then(function(data) {
             if (!data) resolve(customTestData);
             if (data.samples && data.samples.length > 0) {
-                data.samples.forEach(function (item, index) {
+                data.samples.forEach(function(item, index) {
                     customTestData[index + 1] = {
                         input: item.input,
                         output: item.output
@@ -8770,7 +8785,7 @@ async function officialCompiler(code, input) {
             headers: {
                 'X-Csrf-Token': CF_csrf_token
             },
-            onload: function (responseDetails) {
+            onload: function(responseDetails) {
                 if (responseDetails.status !== 200 || !responseDetails.response) {
                     result.Errors = `提交代码到 codeforces 服务器时发生了错误，请重试 ${findHelpText1}`;
                     resolve(result);
@@ -8784,7 +8799,7 @@ async function officialCompiler(code, input) {
                     }
                 }
             },
-            onerror: function () {
+            onerror: function() {
                 result.Errors = '请求 customTestSubmitId 时网络错误';
                 resolve(result);
             }
@@ -8805,7 +8820,7 @@ async function officialCompiler(code, input) {
                     headers: {
                         'X-Csrf-Token': CF_csrf_token
                     },
-                    onload: function (responseDetails) {
+                    onload: function(responseDetails) {
                         if (responseDetails.status !== 200 || !responseDetails.response) {
                             result.Errors = `请求运行结果时发生了错误，请重试 ${findHelpText1}`;
                             resolve(result);
@@ -8832,7 +8847,7 @@ async function officialCompiler(code, input) {
                             }
                         }
                     },
-                    onerror: function () {
+                    onerror: function() {
                         result.Errors = '请求运行结果时网络错误';
                         resolve(result);
                     }
@@ -8896,7 +8911,7 @@ async function rextesterCompiler(code, input) {
             method: 'POST',
             url: 'https://rextester.com/rundotnet/Run',
             data: data,
-            onload: function (responseDetails) {
+            onload: function(responseDetails) {
                 if (responseDetails.status !== 200 || !responseDetails.response) {
                     result.Errors = `发生了未知的错误，请重试 ${findHelpText1}`;
                     resolve(result);
@@ -8913,7 +8928,7 @@ async function rextesterCompiler(code, input) {
                     }
                 }
             },
-            onerror: function () {
+            onerror: function() {
                 result.Errors = '网络错误';
                 resolve(result);
             }
@@ -8952,7 +8967,7 @@ function wandboxCompilerArgsChange(nowSelect) {
         // 编译器参数刷新
         function refreshCompilerArgs() {
             var flags = '';
-            $("#CompilerBox").find("*").each(function () {
+            $("#CompilerBox").find("*").each(function() {
                 if ($(this).is("input[type='checkbox']")) {
                     let flag = $(this).prop("checked") ? $(this).val() : '';
                     flags += flag + (flag ? ' ' : '');
@@ -8966,7 +8981,7 @@ function wandboxCompilerArgsChange(nowSelect) {
         }
 
         // 编译器切换监听
-        CompilerChange.change(function () {
+        CompilerChange.change(function() {
             let selectedName = $('#CompilerChange').val();
             let Compiler = Languagefiltered.find(
                 (obj) => obj.name === selectedName
@@ -8992,7 +9007,7 @@ function wandboxCompilerArgsChange(nowSelect) {
                     </div>
                     `);
                     div.append(single);
-                    single.find("input").change(function () {
+                    single.find("input").change(function() {
                         refreshCompilerArgs();
                     });
                 } else if (switche.type == "select") {
@@ -9006,7 +9021,7 @@ function wandboxCompilerArgsChange(nowSelect) {
                             .text(option['display-name']);
                         select.append(op);
                     }
-                    select.change(function () {
+                    select.change(function() {
                         refreshCompilerArgs();
                     });
                 }
@@ -9015,14 +9030,14 @@ function wandboxCompilerArgsChange(nowSelect) {
             if (Compiler['compiler-option-raw'] == true) {
                 let textarea = $(`<textarea id="compiler_option_raw" placeholder="Raw compiler options" style="resize: vertical;"></textarea>`);
                 div.append(textarea);
-                textarea.on('input', function () {
+                textarea.on('input', function() {
                     refreshCompilerArgs();
                 });
             }
             if (Compiler['runtime-option-raw'] == true) {
                 let textarea = $(`<textarea id="runtime_option_raw" placeholder="Raw runtime options" style="resize: vertical;"></textarea>`);
                 div.append(textarea);
-                textarea.on('input', function () {
+                textarea.on('input', function() {
                     refreshCompilerArgs();
                 });
             }
@@ -9061,7 +9076,7 @@ async function wandboxCompiler(code, input) {
             method: 'POST',
             url: 'https://wandbox.org/api/compile.json',
             data: JSON.stringify(data),
-            onload: function (responseDetails) {
+            onload: function(responseDetails) {
                 if (responseDetails.status !== 200 || !responseDetails.response) {
                     result.Errors = `发生了未知的错误，请重试 ${findHelpText1}`;
                     resolve(result);
@@ -9078,7 +9093,7 @@ async function wandboxCompiler(code, input) {
                     }
                 }
             },
-            onerror: function () {
+            onerror: function() {
                 result.Errors = '网络错误';
                 resolve(result);
             }
@@ -9257,7 +9272,7 @@ async function addProblemPageCodeEditor() {
     runButton.on('click', (event) => runCode(event, form.sourceDiv, form.submitDiv));
 
     // 提交
-    submitButton.on('click', async function (event) {
+    submitButton.on('click', async function(event) {
         event.preventDefault();
         if (isCodeSubmitConfirm) {
             const submit = await createDialog(
@@ -9273,7 +9288,7 @@ async function addProblemPageCodeEditor() {
                 $('#CFBetter_SubmitForm').submit();
             } else {
                 submitButton.addClass('disabled');
-                setTimeout(function () {
+                setTimeout(function() {
                     submitButton.removeClass('disabled');
                 }, 300);
             }
@@ -9874,7 +9889,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         let index = parseInt(config.choice, 10);
         if (index == -1) config.choice = "";
         else config.choice = config.configurations[index].note;
-        config.configurations.forEach(function (item) {
+        config.configurations.forEach(function(item) {
             item.name = item.note;
             delete item.note;
         });
@@ -9887,7 +9902,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     let config = GM_getValue("Complet_config");
     if (config.changed === undefined) {
         config.changed = true; // 设置一个迁移标志
-        config.configurations.forEach(function (item) {
+        config.configurations.forEach(function(item) {
             if (item.note !== undefined) {
                 item.name = item.note;
                 delete item.note;
