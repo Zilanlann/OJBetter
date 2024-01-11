@@ -53,8 +53,8 @@
 // @compatible	 Edge
 // @incompatible safari
 // @supportURL   https://github.com/beijixiaohu/OJBetter/issues
-// @downloadURL https://update.greasyfork.org/scripts/465777/Codeforces%20Better%21.user.js
-// @updateURL https://update.greasyfork.org/scripts/465777/Codeforces%20Better%21.meta.js
+// @downloadURL https://github.com/Zilanlann/OJBetter/raw/main/script/Codeforces%20Better!.js
+// @updateURL https://github.com/Zilanlann/OJBetter/raw/main/script/Codeforces%20Better!.js
 // ==/UserScript==
 
 // 状态与初始化
